@@ -25,18 +25,45 @@
 
 ---
 
-## 3. 仓库地图 / Repo Map (qvcc-labs)
+## 3. 仓库地图 / Repo Map (qvcc-labs)  
+*English positioning first—grouped by White-Paper chapter.*
 
-| 仓库 Repo | 今晚命令 Tonight's Command | 徽章 Badge |
-|---|---|---|
-| [qvcc-spec](https://github.com/qvcc-labs/qvcc-spec) | `make spec-serve` → localhost:3000 | ![last-commit](https://img.shields.io/github/last-commit/qvcc-labs/qvcc-spec) |
-| [qvcc-node](https://github.com/qvcc-labs/qvcc-node) | `docker compose up` (4-node testnet) | ![docker-pulls](https://img.shields.io/docker/pulls/qvcc-labs/node) |
-| [pqscale-circuit](https://github.com/qvcc-labs/pqscale-circuit) | `make mvp-proof` (64 sig → 160 B) | ![circom](https://img.shields.io/badge/circom-2.1.6-blue) |
-| [qvcc-sdk-js](https://github.com/qvcc-labs/qvcc-sdk-js) | `npm i @qvcc/sdk` one-line transfer | ![npm](https://img.shields.io/npm/v/@qvcc/sdk) |
-| [qvcc-explorer](https://github.com/qvcc-labs/qvcc-explorer) | [explorer.qvcc-labs.io](https://explorer.qvcc-labs.io) | ![uptime](https://img.shields.io/uptimerobot/ratio/m789055207-8c9a456c7e5afbea8) |
-| [qvcc-faucet](https://github.com/qvcc-labs/qvcc-faucet) | GitHub OAuth faucet | ![oauth](https://img.shields.io/badge/oauth-github-green) |
-| [qvcc-compliance](https://github.com/qvcc-labs/qvcc-compliance) | `go run cmd/fatf-report` encrypted XML | ![go-version](https://img.shields.io/github/go-mod/go-version/qvcc-labs/qvcc-compliance) |
-| [qvcc-security](https://github.com/qvcc-labs/qvcc-security) | 10 k USDC+ bug bounty | ![PVR](https://img.shields.io/badge/PVR-enabled-red) |
+### A. Constitutional Layer 宪章层
+| Repo | English Positioning (One-liner) | Tonight's Command | Badge |
+|---|---|---|---|
+| [qvcc-spec](https://github.com/qvcc-labs/qvcc-spec) | Versioned protocol specification (Markdown + auto-docsify) | `make spec-serve` → localhost:3000 | ![last-commit](https://img.shields.io/github/last-commit/qvcc-labs/qvcc-spec) |
+
+### B. Core Implementation 技术实现
+| Repo | English Positioning (One-liner) | Tonight's Command | Badge |
+|---|---|---|---|
+| [qvcc-node](https://github.com/qvcc-labs/qvcc-node) | Reference Go node (Cosmos-SDK + native Dilithium) | `docker compose up` (4-node test-net) | ![docker-pulls](https://img.shields.io/docker/pulls/qvcc-labs/node) |
+| [pqscale-circuit](https://github.com/qvcc-labs/pqscale-circuit) | PQScale zk circuits & trusted-setup ceremony | `make mvp-proof` (64 sig → 160 B) | ![circom](https://img.shields.io/badge/circom-2.1.6-blue) |
+
+### C. SDK & Tooling 开发者工具
+| Repo | English Positioning (One-liner) | Tonight's Command | Badge |
+|---|---|---|---|
+| [qvcc-sdk-js](https://github.com/qvcc-labs/qvcc-sdk-js) | JS/TS SDK—one-line install: `npm i @qvcc/sdk` | `npm i @qvcc/sdk` one-line transfer | ![npm](https://img.shields.io/npm/v/@qvcc/sdk) |
+| [qvcc-cli](https://github.com/qvcc-labs/qvcc-cli) | Command-line wallet & node operator toolkit | `go install github.com/qvcc-labs/qvcc-cli@latest` | ![go-version](https://img.shields.io/github/go-mod/go-version/qvcc-labs/qvcc-cli) *(optional)* |
+
+### D. Governance & Compliance 治理与合规
+| Repo | English Positioning (One-liner) | Tonight's Command | Badge |
+|---|---|---|---|
+| [qvcc-governance](https://github.com/qvcc-labs/qvcc-governance) | Off-chain & on-chain governance templates, calculators, contracts | `go run cmd/qv-gov` proposal-new | ![gov](https://img.shields.io/badge/governance-active-blue) |
+| [qvcc-compliance](https://github.com/qvcc-labs/qvcc-compliance) | FATF/ESG encryption layer + ISO 20022 transformer + carbon API | `go run cmd/fatf-report` encrypted XML | ![go-version](https://img.shields.io/github/go-mod/go-version/qvcc-labs/qvcc-compliance) |
+
+### E. Test-net & Frontend 测试网与前端
+| Repo | English Positioning (One-liner) | Tonight's Command | Badge |
+|---|---|---|---|
+| [qvcc-testnet](https://github.com/qvcc-labs/qvcc-testnet) | Public test-net genesis, seeds, how-to-join docs | `curl -sL testnet.qvcc-labs.io/join.sh | bash` | ![testnet](https://img.shields.io/badge/testnet-online-green) |
+| [qvcc-faucet](https://github.com/qvcc-labs/qvcc-faucet) | Anti-bot test-token faucet (GitHub OAuth) | GitHub OAuth faucet | ![oauth](https://img.shields.io/badge/oauth-github-green) |
+| [qvcc-explorer](https://github.com/qvcc-labs/qvcc-explorer) | Real-time block explorer showing PQScale proof size | [explorer.qvcc-labs.io](https://explorer.qvcc-labs.io) | ![uptime](https://img.shields.io/uptimerobot/ratio/m789055207-8c9a456c7e5afbea8) |
+
+### F. Security & Community 安全与社区
+| Repo | English Positioning (One-liner) | Tonight's Command | Badge |
+|---|---|---|---|
+| [qvcc-security](https://github.com/qvcc-labs/qvcc-security) | Vulnerability disclosure & bug-bounty program (from 10 k USDC) | PVR enabled | ![PVR](https://img.shields.io/badge/PVR-enabled-red) |
+| [qvcc-community](https://github.com/qvcc-labs/qvcc-community) | Governance archives, meeting minutes, grant templates | Discussions active | ![community](https://img.shields.io/badge/community-active-blue) |
+| [qvcc-brand](https://github.com/qvcc-labs/qvcc-brand) | Logo kit, color palette, slide deck, brand guide | Download kit | ![brand](https://img.shields.io/badge/brand-kit-orange) |
 
 ---
 
@@ -45,3 +72,46 @@
 **一条命令 / One-liner**:  
 ```bash
 curl -sL https://raw.githubusercontent.com/qvcc-labs/qvcc-node/main/scripts/demo.sh | bash
+
+---
+
+## 5. 加入宪章 / Join the Covenant  
+- **开发者&密码学家** → 提PR；你的代码将成为新海之渠  
+- **机构&监管伙伴** → 共建全球量子安全标准  
+
+[![Read Whitepaper](https://img.shields.io/badge/Read-Whitepaper-%23004d99)](https://github.com/qvcc-labs/qvcc-whitepaper)
+[![GitHub Org](https://img.shields.io/badge/GitHub-org-%23181717)](https://github.com/qvcc-labs)
+[![Twitter](https://img.shields.io/badge/Twitter-@qvcc_labs-%231da1f2)](https://twitter.com/qvcc_labs)
+
+&gt; **"The covenant is code—come pull the steel."**  
+&gt; **代码即宪章，欢迎来拉取钢铁。**
+
+---
+
+## 6. 生态路线图 / Ecosystem Roadmap
+
+| Quarter | Milestone | Deliverable Repo | Status |
+|---|---|---|---|
+| Q4 2025 | PQScale ZK open-source | `pqscale-circuit` v1.0 | 🔄 |
+| Q2 2026 | Main-net V1.0 (crypto-agile) | `qvcc-node` v1.0 | 📦 |
+| Q4 2026 | AI-security model beta | `qvcc-node` + `qvcc-governance` | 🔮 |
+| Q2 2027 | Human-AI maturity report | `qvcc-community` report | 🔮 |
+
+---
+
+## 7. 许可证与贡献 / License & Contributing  
+[MIT License](https://github.com/qvcc-labs/.github/blob/main/LICENSE)  
+除非额外说明，所有仓库默认使用 MIT 许可证。  
+贡献请遵循 [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) 与 [Security Policy](https://github.com/qvcc-labs/qvcc-security/blob/main/SECURITY.md)。
+
+---
+
+## 8. 联系 / Contact  
+- 安全漏洞 → 使用 [qvcc-security Private Vulnerability Reporting](https://github.com/qvcc-labs/qvcc-security/security/advisories)  
+- 一般讨论 → [Discussions · qvcc-community](https://github.com/qvcc-labs/qvcc-community/discussions)  
+- 推特快讯 → [@qvcc_labs](https://twitter.com/qvcc_labs)
+
+---
+
+**© 2025 qvcc-labs**  
+*Polaris Covenant · 北极星誓言*
