@@ -72,6 +72,7 @@
 **一条命令 / One-liner**:  
 ```bash
 curl -sL https://raw.githubusercontent.com/qvcc-labs/qvcc-node/main/scripts/demo.sh | bash
+```
 
 ---
 
