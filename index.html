@@ -1,121 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hans">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QVCC Protocol: The Code for Global Value Trust | 量子验证货币法典</title>
+    <title>QVCC Protocol | 全球数字价值宪章层</title>
+    <meta name="description" content="QVCC是后量子时代的全球信任框架，为CBDC、RWA、链上法币提供T.E.S.级信任底座——Trust、Equity、Sustainability。">
     <style>
-        /* 基础样式 */
-        body { 
-            font-family: 'Arial', 'Microsoft YaHei', sans-serif; 
-            line-height: 1.6; 
-            max-width: 900px; 
-            margin: 40px auto; 
-            padding: 25px; 
-            background-color: #ffffff; 
-            color: #1a1a1a; 
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-        }
-        .header { 
-            text-align: center; 
-            padding-bottom: 25px; 
-            margin-bottom: 30px; 
-            border-bottom: 4px solid #004d99; /* 权威蓝 */
-        }
-        h1 { 
-            font-size: 2.5em; 
-            color: #004d99; 
-            margin-bottom: 10px; 
-        }
-        h2 { 
-            font-size: 1.6em; 
-            color: #cc0000; 
-            margin-top: 30px;
-            text-transform: uppercase;
-        }
-        .mission-box {
-            background-color: #f0f8ff; /* 浅蓝背景突出使命 */
-            padding: 25px;
-            border-radius: 8px;
-            border-left: 6px solid #cc0000; /* 强调红线 */
-            margin-bottom: 40px;
-        }
-        .cta-box {
-            text-align: center;
-            padding: 30px 20px;
-            background-color: #333;
-            color: white;
-            border-radius: 8px;
-            margin-top: 40px;
-        }
-        .cta-box a {
-            display: inline-block;
-            margin: 10px;
-            padding: 12px 25px;
-            background-color: #00cc66; /* 行动绿 */
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .cta-box a:hover {
-            background-color: #00aa55;
-        }
-        strong { color: #cc0000; } 
-        .section p { font-size: 1.05em; }
+        :root{--primary:#004d99;--accent:#cc0000;--action:#00cc66;--bg:#ffffff;--surface:#f7f9fc;--text:#1a1a1a;--muted:#555;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;line-height:1.7;background:var(--bg);color:var(--text);}
+        .container{max-width:880px;margin:0 auto;padding:48px 24px;}
+        header{text-align:center;padding-bottom:40px;border-bottom:2px solid var(--surface);}
+        header h1{font-size:2.25rem;margin:0 0 8px;color:var(--primary);letter-spacing:1px;}
+        header .subtitle{font-size:1.1rem;color:var(--muted);}
+        section{margin:48px 0;}
+        h2{font-size:1.5rem;margin-bottom:16px;color:var(--primary);border-left:4px solid var(--accent);padding-left:12px;}
+        .card{background:var(--surface);border-radius:8px;padding:24px;margin-bottom:24px;}
+        .highlights{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
+        .hl-item{background:#fff;border:1px solid #e0e0e0;padding:20px;border-radius:6px;}
+        .hl-item h3{margin:0 0 8px;font-size:1.1rem;color:var(--accent);}
+        .cta-group{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:32px;}
+        .btn{display:inline-block;padding:12px 28px;background:var(--action);color:#fff;text-decoration:none;border-radius:4px;font-weight:600;transition:background .25s;}
+        .btn:hover{background:#00aa55;}
+        .quote{text-align:center;font-style:italic;color:var(--muted);margin-top:48px;padding-top:24px;border-top:1px dashed #ccc;}
+        footer{text-align:center;font-size:.9rem;color:var(--muted);margin-top:64px;}
+        @media (max-width:600px){header h1{font-size:1.8rem;}h2{font-size:1.3rem;}.btn{width:100%;text-align:center;}}
     </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>QVCC Protocol</h1>
+            <p class="subtitle">全球数字价值交换的宪章层 · 后量子信任框架</p>
+        </header>
 
-    <div class="header">
-        <h1>玄铁铸契，万象归流。</h1>
-        <p style="font-size: 1.3em; color: #555;">Quantum Covenant, Universal Flow. | <strong>QVCC Protocol</strong></p>
-    </div>
+        <section id="mission">
+            <div class="card">
+                <h2>核心使命 / Mission</h2>
+                <p><strong>QVCC（Quantum-Verified Currency Code）</strong>不是另一种加密货币，而是高于应用层的<strong>“宪章层”</strong>，为CBDC、代币化资产、链上法币提供三大底座：</p>
+                <ul>
+                    <li><strong>信任 Trust</strong>：强制QRNG熵源 + PQC（Dilithium/Kyber）原生集成</li>
+                    <li><strong>公平 Equity</strong>：AI节点投票权重≤10 % + 平方根缩放 + 人类Tier-0 48 h否决</li>
+                    <li><strong>持久 Sustainability</strong>：反投机经济模型 + 技术博物馆节点 + 代际储备金</li>
+                </ul>
+            </div>
+        </section>
 
-    <div class="mission-box">
-        <h2>核心使命：铸造全球价值交换的宪章层 / Mission: Forge the Constitutional Layer of Global Value</h2>
-        
-        <p><strong>[EN] Official Name:</strong> Quantum Verified Currency Code (QVCC)</p>
-        <p><strong>[中] 官方全称：</strong>量子验证货币法典 (QVCC)</p>
+        <section id="highlights">
+            <h2>白皮书级亮点 / Whitepaper Highlights</h2>
+            <div class="highlights">
+                <div class="hl-item">
+                    <h3>后量子安全</h3>
+                    <p>区块头32 B量子熵实时可查；PQScale ZK压缩64笔Dilithium签名至160 B，扩容6k+ TPS。</p>
+                </div>
+                <div class="hl-item">
+                    <h3>实时终局性</h3>
+                    <p>T+0 BFT共识≤4 s；GPU-Fallback保底1k TPS；浏览器显示“不可回滚”绿色图标。</p>
+                </div>
+                <div class="hl-item">
+                    <h3>人机共治</h3>
+                    <p>NHN集群权重硬顶10 %；平方根缩放防女巫；哲学级宪章修改需Tier-0 100 %同意。</p>
+                </div>
+                <div class="hl-item">
+                    <h3>合规即插</h3>
+                    <p>FATF旅行规则自动加密上报（ISO 20022）；链上出具ESG碳排报告，24/7溯源。</p>
+                </div>
+            </div>
+        </section>
 
-        <p><strong>[EN] Our Stance:</strong> We are not creating another coin. QVCC is designed as the <strong>Legislative Authority</strong> (Code) for all forms of digital value (Currency), solving the existential threats of <strong>quantum computing</strong> and <strong>trust fragmentation</strong> in finance and Web3.</p>
-        <p><strong>[中] 我们的立场：</strong>我们并非创造另一种货币。QVCC旨在成为未来价值的<strong>立法者</strong>，通过<strong>量子安全验证</strong>，解决金融和Web3领域中<strong>量子威胁</strong>与<strong>信任碎片化</strong>的根本痛点。</p>
-        
-        <p><strong>[EN] Positioning:</strong> The <strong>Constitutional Layer</strong> for all CBDC, Tokenized Assets, and institutional value exchange. <strong>QVCC-Verified</strong> will become the global standard for trust.</p>
-        <p><strong>[中] 战略定位：</strong>全球央行数字货币（CBDC）、代币化资产及机构价值交换的<strong>宪章层</strong>。<strong>QVCC-Verified</strong>将成为全球信任的新标准。</p>
-    </div>
+        <section id="repos">
+            <h2>仓库矩阵 / Repo Matrix</h2>
+            <div class="card">
+                <ul>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-spec" target="_blank">qvcc-spec</a> 可版本化协议规范（Markdown + 自动编译）</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-node" target="_blank">qvcc-node</a> 官方Go节点（Cosmos-SDK + Dilithium）</li>
+                    <li><a href="https://github.com/qvcc-labs/pqscale-circuit" target="_blank">pqscale-circuit</a> PQScale零知识电路 & 可信设置</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-sdk-js" target="_blank">qvcc-sdk-js</a> JS/TS SDK（npm i @qvcc/sdk）</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-explorer" target="_blank">qvcc-explorer</a> 区块浏览器（实时PQScale证明大小）</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-faucet" target="_blank">qvcc-faucet</a> 测试网水龙头（GitHub OAuth防刷）</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-compliance" target="_blank">qvcc-compliance</a> FATF/ESG加密上报工具</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-security" target="_blank">qvcc-security</a> 漏洞赏金计划（10 k USDC起）</li>
+                </ul>
+            </div>
+        </section>
 
-    <div class="section">
-        <h2>号召：加入下一代信任结构 / Call: Join the Next Generation of Trust</h2>
-        
-        <p><strong>[EN] For Developers & Cryptographers:</strong> If your expertise lies in **PQC (Post-Quantum Cryptography)**, systems architecture, or complex protocol design, your talent is the core steel for this covenant. Join us in the <code>qvcc-labs</code> to build the unhackable future.</p>
-        <p><strong>[中] 致开发者与密码学家：</strong>如果您的专长在于<strong>后量子密码学 (PQC)</strong>、系统架构或复杂协议设计，您的才华就是铸造此契约的核心玄铁。请加入 <code>qvcc-labs</code>，共筑不可撼动的未来。</p>
+        <section id="quickstart">
+            <h2>30分钟体验 / 30-min Quick Path</h2>
+            <ol>
+                <li>领取测试币 → </li>
+                <li>发送一笔PQScale压缩交易 → </li>
+                <li>浏览器实时验证160 B证明 → </li>
+                <li>对治理提案点「人类否决」→ </li>
+                <li>查看节点碳排曲线</li>
+            </ol>
+            <div class="cta-group">
+                <a class="btn" href="https://raw.githubusercontent.com/qvcc-labs/qvcc-node/main/scripts/demo.sh">一键跑通 Demo</a>
+                <a class="btn" href="https://explorer.qvcc-labs.io" target="_blank">进入浏览器</a>
+            </div>
+        </section>
 
-        <p><strong>[EN] For Institutional Partners:</strong> We seek collaboration with compliance, finance, and government bodies focused on establishing global, quantum-safe regulatory structures. The path to a $Billion valuation lies in broad, systemic adoption.</p>
-        <p><strong>[中] 致机构合作伙伴：：</strong>我们寻求与专注于建立全球性、量子安全监管框架的<strong>合规、金融及政府机构</strong>合作。通往亿级资本化的道路，在于系统性的广泛采纳。</p>
-    </div>
+        <section id="call">
+            <h2>加入宪章 / Join the Covenant</h2>
+            <div class="card">
+                <p><strong>开发者&密码学家</strong>：若你擅长Rust/Go、PQC、circom，请直接提PR；你的代码将成为新海之渠。</p>
+                <p><strong>机构&监管伙伴</strong>：欢迎CBDC、MiCA、ESG合规方共建全球量子安全标准。</p>
+            </div>
+            <div class="cta-group">
+                <a class="btn" href="https://github.com/qvcc-labs/qvcc-whitepaper" target="_blank">阅读白皮书 Whitepaper</a>
+                <a class="btn" href="https://github.com/qvcc-labs" target="_blank">浏览组织 GitHub</a>
+                <a class="btn" href="https://twitter.com/qvcc_labs" target="_blank">关注推特 Twitter</a>
+            </div>
+        </section>
 
-    <div class="cta-box">
-        <p style="font-size: 1.2em; font-weight: bold;">
-            [EN] The Covenant Starts Now.
-            <br>[中] 法典颁布，即刻启动。
-        </p>
-        <a href="https://github.com/qvcc-labs/qvcc-whitepaper" target="_blank">
-            阅读白皮书 (Whitepaper)
-        </a>
-        <a href="https://github.com/qvcc-labs/qvcc-vrf-core" target="_blank">
-            加入代码库 (GitHub)
-        </a>
+        <div class="quote">
+            <p>我非泳者，乃为掘渠人。<br>不铸货币之水，而立法典之渠。<br>引万川归海，自成新海。</p>
         </div>
-    
-    <div class="section" style="text-align: center; border-top: 1px dashed #ccc; padding-top: 20px; margin-top: 40px;">
-        <p style="font-weight: bold; color: #004d99;">QVCC.io | 北极星誓言</p>
-        <p style="font-style: italic; font-size: 1em; color: #555;">
-            我非泳者，乃为掘渠人。 不铸货币之水，而立法典之渠。 引万川归海，自成新海。
-        </p>
-    </div>
 
+        <footer>
+            © 2025 qvcc-labs · 北极星誓言 Polaris Covenant
+        </footer>
+    </div>
 </body>
 </html>
