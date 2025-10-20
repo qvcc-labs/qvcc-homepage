@@ -1,3 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QVCC Protocol | Post-Quantum Trust Layer</title>
+    <meta name="description" content="QVCC is the constitutional layer for global digital-value exchange, integrating PQC, AI governance and human final-veto to deliver Trust, Equity, Sustainability.">
+    <style>
+        :root{--primary:#004d99;--accent:#cc0000;--action:#00cc66;--bg:#ffffff;--surface:#f7f9fc;--text:#1a1a1a;--muted:#555;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:"Helvetica Neue",Arial,"Microsoft YaHei",sans-serif;line-height:1.7;background:var(--bg);color:var(--text);}
+        .container{max-width:880px;margin:0 auto;padding:48px 24px;}
+        header{text-align:center;padding-bottom:40px;border-bottom:2px solid var(--surface);}
+        header h1{font-size:2.25rem;margin:0 0 8px;color:var(--primary);letter-spacing:1px;}
+        header .subtitle{font-size:1.1rem;color:var(--muted);}
+        .lang-switch{position:absolute;top:24px;right:24px;font-size:.9rem;color:var(--primary);}
+        .lang-switch a{text-decoration:none;border:1px solid var(--primary);padding:4px 8px;border-radius:4px;}
+        section{margin:48px 0;}
+        h2{font-size:1.5rem;margin-bottom:16px;color:var(--primary);border-left:4px solid var(--accent);padding-left:12px;}
+        .card{background:var(--surface);border-radius:8px;padding:24px;margin-bottom:24px;}
+        .highlights{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
+        .hl-item{background:#fff;border:1px solid #e0e0e0;padding:20px;border-radius:6px;}
+        .hl-item h3{margin:0 0 8px;font-size:1.1rem;color:var(--accent);}
+        .cta-group{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:32px;}
+        .btn{display:inline-block;padding:12px 28px;background:var(--action);color:#fff;text-decoration:none;border-radius:4px;font-weight:600;transition:background .25s;}
+        .btn:hover{background:#00aa55;}
+        .quote{text-align:center;font-style:italic;color:var(--muted);margin-top:48px;padding-top:24px;border-top:1px dashed #ccc;}
+        footer{text-align:center;font-size:.9rem;color:var(--muted);margin-top:64px;}
+        @media (max-width:600px){header h1{font-size:1.8rem;}h2{font-size:1.3rem;}.btn{width:100%;text-align:center;}}
+    </style>
+</head>
+<body>
+    <div class="lang-switch"><a href="zh.html">中文</a></div>
+    <div class="container">
+        <header>
+            <h1>QVCC Protocol</h1>
+            <p class="subtitle">Post-Quantum Trust Layer for Global Digital Value</p>
+        </header>
+
+        <section id="mission">
+            <div class="card">
+                <h2>Mission</h2>
+                <p><strong>QVCC (Quantum-Verified Currency Code)</strong> is not another cryptocurrency, but the <strong>Constitutional Layer</strong> above applications, providing three pillars for CBDCs, tokenized assets and on-chain fiat:</p>
+                <ul>
+                    <li><strong>Trust</strong>: Mandatory QRNG entropy + native PQC (Dilithium/Kyber)</li>
+                    <li><strong>Equity</strong>: AI-node voting cap 10 % + sqrt scaling + human Tier-0 48 h veto</li>
+                    <li><strong>Sustainability</strong>: Anti-speculation economy + Tech-Museum nodes + Inter-generational Reserve</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="highlights">
+            <h2>Whitepaper Highlights</h2>
+            <div class="highlights">
+                <div class="hl-item">
+                    <h3>Post-Quantum Security</h3>
+                    <p>32 B quantum entropy in block header; PQScale ZK rolls 64 Dilithium sigs into 160 B, targeting 6 k+ TPS.</p>
+                </div>
+                <div class="hl-item">
+                    <h3>Real-Time Finality</h3>
+                    <p>T+0 BFT ≤4 s; GPU-Fallback ≥1 k TPS; explorer shows "Irreversible" green badge.</p>
+                </div>
+                <div class="hl-item">
+                    <h3>Human-AI Co-Governance</h3>
+                    <p>NHN cluster weight hard-cap 10 %; square-root scaling; philosophical charter amend needs 100 % Tier-0 consent.</p>
+                </div>
+                <div class="hl-item">
+                    <h3>Compliance-Ready</h3>
+                    <p>Auto FATF Travel-Rule report (ISO 20022) encrypted on-chain; live ESG carbon footprint per validator.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="repos">
+            <h2>Repo Matrix</h2>
+            <div class="card">
+                <ul>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-spec" target="_blank">qvcc-spec</a> Versioned protocol spec (Markdown + auto docsify)</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-node" target="_blank">qvcc-node</a> Official Go node (Cosmos-SDK + Dilithium)</li>
+                    <li><a href="https://github.com/qvcc-labs/pqscale-circuit" target="_blank">pqscale-circuit</a> PQScale zk circuits & trusted setup</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-sdk-js" target="_blank">qvcc-sdk-js</a> JS/TS SDK (npm i @qvcc/sdk)</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-explorer" target="_blank">qvcc-explorer</a> Block explorer with live PQScale proof size</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-faucet" target="_blank">qvcc-faucet</a> Test-net faucet (GitHub OAuth anti-bot)</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-compliance" target="_blank">qvcc-compliance</a> FATF/ESG on-chain reporting tools</li>
+                    <li><a href="https://github.com/qvcc-labs/qvcc-security" target="_blank">qvcc-security</a> Bug-bounty (from 10 k USDC)</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="quickstart">
+            <h2>30-min Quick Path</h2>
+            <ol>
+                <li>Grab test tokens → </li>
+                <li>Send a PQScale compressed tx → </li>
+                <li>Verify 160 B proof in explorer → </li>
+                <li>Click "Human Veto" on a proposal → </li>
+                <li>Check validator carbon curve</li>
+            </ol>
+            <div class="cta-group">
+                <a class="btn" href="https://raw.githubusercontent.com/qvcc-labs/qvcc-node/main/scripts/demo.sh">One-Command Demo</a>
+                <a class="btn" href="https://explorer.qvcc-labs.io" target="_blank">Open Explorer</a>
+            </div>
+        </section>
+
         <section id="call">
             <h2>Join the Covenant</h2>
             <div class="card">
@@ -16,7 +120,6 @@
                Not forging currency water, but coding constitutional channels.<br>
                Rivers into sea, a new sea born.</p>
         </div>
-
     </div><!-- /container -->
 
     <footer>
