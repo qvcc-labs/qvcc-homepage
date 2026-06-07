@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resilience Core | 韧性治理哲学</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow-x: hidden; }
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+        .snap { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; }
+        .slide { height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; padding: 2rem; }
+        .glass { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; padding: 2rem; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="snap">
+        <!-- Case 1: Tesla -->
+        <section class="slide">
+            <div class="glass">
+                <span class="text-blue-500 font-bold text-xs uppercase tracking-widest">Case 01: Tesla Model X</span>
+                <h1 class="text-2xl font-bold mt-2 mb-4">生产力与物理形变的悖论</h1>
+                <p class="text-gray-300 text-sm leading-relaxed">工程师在 CAD 环境下设计了毫米级的车门缝隙。然而，车辆在下线进入平整度不一的地面时，底盘受重力影响发生微米级形变，导致车门无法正常开合。<strong>错误根源：将静态理想环境下的局部最优，强行映射为动态物理空间的全局结论。</strong></p>
+            </div>
+        </section>
+
+        <!-- Case 2: AWS -->
+        <section class="slide">
+            <div class="glass">
+                <span class="text-blue-500 font-bold text-xs uppercase tracking-widest">Case 02: AWS us-east-1 (2017)</span>
+                <h1 class="text-2xl font-bold mt-2 mb-4">自动化逻辑的连锁崩溃</h1>
+                <p class="text-gray-300 text-sm leading-relaxed">一名工程师在进行简单的容量回收操作时输入错误，触发了系统自动重试机制。这一反馈回路在高度耦合的分布式系统中引发了雪崩效应，导致数千个系统服务陷入死循环。<strong>错误根源：未对高频耦合的操作路径设置熔断反馈机制。</strong></p>
+            </div>
+        </section>
+
+        <!-- Case 3: Cloudflare -->
+        <section class="slide">
+            <div class="glass">
+                <span class="text-blue-500 font-bold text-xs uppercase tracking-widest">Case 03: Cloudflare BGP (2020)</span>
+                <h1 class="text-2xl font-bold mt-2 mb-4">配置冗余与全局路由失效</h1>
+                <p class="text-gray-300 text-sm leading-relaxed">团队为了清理冗余，下线了一个看似无用的路由前缀，却未意识到它是全球 DNS 流量重定向的关键路径，造成大面积网络中断。<strong>错误根源：缺乏全局拓扑感知，将“局部冗余”误判为“全局无效”。</strong></p>
+            </div>
+        </section>
+
+        <!-- Case 4: UBS -->
+        <section class="slide">
+            <div class="glass">
+                <span class="text-blue-500 font-bold text-xs uppercase tracking-widest">Case 04: UBS 2011 违规交易</span>
+                <h1 class="text-2xl font-bold mt-2 mb-4">治理失明的技术隔阂</h1>
+                <p class="text-gray-300 text-sm leading-relaxed">交易员的套利操作逻辑符合当时规则，但在 IT 系统升级后，风控显示界面与后台数据库出现逻辑脱节，导致监管层对近 20 亿美元的超限亏损“视而不见”。<strong>错误根源：治理层面的“双盲”，业务逻辑与治理工具在维度上产生了割裂。</strong></p>
+            </div>
+        </section>
+
+        <!-- Defensive Formula -->
+        <section class="slide">
+            <div class="glass text-center">
+                <h2 class="text-blue-400 font-bold text-xs uppercase tracking-widest mb-6">防御：系统性失效定律</h2>
+                <div class="bg-blue-900/20 p-6 rounded-xl border border-blue-500/30">
+                    <p class="text-white font-mono text-sm">Systemic Disaster =</p>
+                    <p class="text-blue-400 font-mono text-lg font-bold my-2">Local Correctness × (Global Coupling - Feedback Network)</p>
+                </div>
+                <p class="text-gray-400 text-xs mt-6">治理的本质，是控制耦合度，并将反馈回路前置。</p>
+            </div>
+        </section>
+
+        <!-- Offensive Formula -->
+        <section class="slide">
+            <div class="glass text-center">
+                <h2 class="text-purple-400 font-bold text-xs uppercase tracking-widest mb-6">进攻：组织竞争力公式</h2>
+                <div class="bg-purple-900/20 p-6 rounded-xl border border-purple-500/30">
+                    <p class="text-white font-mono text-sm">组织竞争力 =</p>
+                    <p class="text-purple-400 font-mono text-lg font-bold my-2">输入 + (智商 × 反馈) - 外泄 - ε(文明的无聊系数)</p>
+                </div>
+                <p class="text-gray-400 text-xs mt-6">通过消灭 ε（无聊系数）来释放组织智商，<br>治理即是构建价值流动的闭环。</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let nodes = Array.from({length: 40}, () => ({x: Math.random()*window.innerWidth, y: Math.random()*window.innerHeight, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.2}));
+        
+        function draw() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            nodes.forEach(n => {
+                n.x += n.vx; n.y += n.vy;
+                if(n.x<0 || n.x>canvas.width) n.vx*=-1;
+                if(n.y<0 || n.y>canvas.height) n.vy*=-1;
+            });
+            for(let i=0; i<nodes.length; i++) {
+                for(let j=i+1; j<nodes.length; j++) {
+                    const d = Math.hypot(nodes[i].x-nodes[j].x, nodes[i].y-nodes[j].y);
+                    if(d < 150) { ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke(); }
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        draw();
+    </script>
+</body>
+</html>
