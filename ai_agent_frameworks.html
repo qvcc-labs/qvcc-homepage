@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>2026 顶级 Agent 框架大盘点 - 录屏大字报 | 真云语音版</title>
+    <title>2026 顶级 Agent 框架大盘点 - 录屏大字报 | 双引擎语音版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -15,9 +15,6 @@
                         neonOrange: '#FF5F1F',
                         cyberBlack: '#0A0A0F',
                     },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    }
                 }
             }
         }
@@ -33,15 +30,12 @@
             user-select: none; 
             -webkit-user-select: none; 
             overscroll-behavior: none; 
-            touch-action: pan-x pan-y; 
         }
         ::-webkit-scrollbar { display: none; }
         
-        /* 卡片 3D 闪切 */
         .card-container { perspective: 1200px; }
         .card-transition { 
             transition: transform 140ms cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 120ms cubic-bezier(0.2, 0.9, 0.4, 1.1); 
-            will-change: transform, opacity;
         }
         .card-exit { 
             transform: translate3d(-30px, -15px, -40px) rotateY(-4deg) scale(0.94); 
@@ -59,7 +53,6 @@
             pointer-events: auto; 
         }
 
-        /* 高阶音频波纹 */
         .wave-bar { 
             display: inline-block; 
             width: 3px; 
@@ -85,11 +78,9 @@
 </head>
 <body class="flex flex-col items-center justify-center text-white relative overflow-hidden">
 
-    <!-- 深邃黑背景 + 科技网格 -->
     <div class="absolute inset-0 bg-cyberBlack z-0"></div>
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(57,255,20,0.06)_0%,_#000_90%)] z-0"></div>
 
-    <!-- 主视觉区域 -->
     <main id="main-click-area" class="w-full h-full max-w-md flex flex-col justify-between px-5 pt-10 pb-20 z-10 relative cursor-pointer">
         <header id="hud-header" class="w-full flex justify-between items-center text-[11px] text-zinc-500 font-mono transition-all duration-300">
             <div class="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
@@ -99,7 +90,6 @@
             <div class="font-mono font-black bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm" id="hud-counter">1 / 9</div>
         </header>
 
-        <!-- 核心卡片区域 -->
         <div class="card-container w-full flex items-center justify-center my-2" style="height: 430px;">
             <div id="card-element" class="card-transition card-active w-full bg-gradient-to-br from-zinc-950/95 to-black/90 border border-yellow-500/30 rounded-2xl p-6 flex flex-col justify-between shadow-2xl shadow-black/80 relative overflow-hidden backdrop-blur-sm" style="height: 100%;">
                 <div class="absolute inset-0 bg-[linear-gradient(rgba(255,215,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,215,0,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
@@ -111,7 +101,7 @@
                 <div id="card-hook-box" class="border-l-4 border-neonOrange bg-neonOrange/5 pl-4 py-2 my-2 rounded-r-md">
                     <p id="card-hook" class="text-xl font-black text-yellow-100 leading-tight drop-shadow-sm">工业级框架榜首之战</p>
                 </div>
-                <div><p id="card-desc" class="text-zinc-400 text-xs leading-relaxed font-medium tracking-wide">官方白皮书推荐 · 真云语音引擎极速响应</p></div>
+                <div><p id="card-desc" class="text-zinc-400 text-xs leading-relaxed font-medium tracking-wide">官方白皮书推荐 · 双引擎语音智能播报</p></div>
                 <div class="absolute bottom-3 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent"></div>
             </div>
         </div>
@@ -121,23 +111,21 @@
         </footer>
     </main>
 
-    <!-- 底部全能控制台: 提词 + 真云语音 + 自动巡航 + 快切 -->
     <div id="recording-controller" class="controller-drawer fixed bottom-0 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/98 border-t border-x border-yellow-900/50 rounded-t-2xl shadow-2xl w-full max-w-md translate-y-[calc(100%-42px)] backdrop-blur-lg">
         
         <button onclick="toggleController(event)" class="w-full h-11 flex items-center justify-between px-6 bg-black/80 rounded-t-2xl border-b border-yellow-900/40 active:bg-zinc-900 transition-all group">
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-neonYellow animate-pulse"></span>
-                <span class="text-[11px] font-black tracking-widest text-zinc-300 font-mono group-hover:text-yellow-300 transition">🎙️ EdgeTTS 真云引擎 · 中英混读高保真</span>
+                <span class="text-[11px] font-black tracking-widest text-zinc-300 font-mono group-hover:text-yellow-300 transition">🎙️ 双引擎语音 · 中英混读</span>
             </div>
             <span id="controller-arrow" class="text-xs text-yellow-500 font-bold transition-transform duration-300">▲ 展开控制台</span>
         </button>
 
         <div class="p-5 flex flex-col gap-4 text-xs bg-black/90">
-            <!-- 实时提词器 + 波纹反馈 -->
             <div class="bg-zinc-900/80 border border-zinc-800 p-3 rounded-xl shadow-inner">
                 <div class="flex justify-between items-center text-[10px] text-neonYellow font-mono font-bold mb-2">
                     <span class="flex items-center gap-2">
-                        📢 云端口播提词器 (EdgeTTS 神经语音)
+                        📢 智能提词器
                         <span id="speaking-wave" class="hidden">
                             <span class="wave-bar"></span>
                             <span class="wave-bar"></span>
@@ -152,17 +140,15 @@
                 <div class="h-[2px] w-full bg-gradient-to-r from-yellow-600/50 to-orange-500/30 mt-2 rounded-full"></div>
             </div>
 
-            <!-- 真云双音色切换 直接调用微软 EdgeTTS 优质声线 -->
             <div class="flex flex-col gap-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
-                <span class="text-zinc-300 font-black text-[11px] flex items-center gap-1"><span class="text-yellow-400">🎛️</span> 微软 EdgeTTS 超拟真声线 (云端)</span>
+                <span class="text-zinc-300 font-black text-[11px] flex items-center gap-1"><span class="text-yellow-400">🎛️</span> 语音引擎 (Web Speech 原生)</span>
                 <div class="grid grid-cols-2 gap-3">
-                    <button id="voice-yunxi" onclick="setCloudVoice(event, 'zh-CN-YunxiNeural')" class="bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all active:scale-95">🎙️ 磁性男声 · 云希</button>
-                    <button id="voice-xiaoxiao" onclick="setCloudVoice(event, 'zh-CN-XiaoxiaoNeural')" class="bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700 transition-all">🎤 甜美主播 · 晓晓</button>
+                    <button id="voice-male" onclick="setVoiceGender(event, 'male')" class="bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all active:scale-95">🎙️ 磁性男声</button>
+                    <button id="voice-female" onclick="setVoiceGender(event, 'female')" class="bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700 transition-all">🎤 甜美女生</button>
                 </div>
-                <div class="text-[9px] text-center text-emerald-400/80 mt-1 flex items-center justify-center gap-1">✅ 在线 · 中英混读自动优化 · 零安装</div>
+                <div class="text-[9px] text-center text-emerald-400/80 mt-1">✅ 浏览器原生支持 · 无需网络代理 · 中英自动识别</div>
             </div>
 
-            <!-- 功能双核：自动巡航 & HUD隐藏 -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800">
                     <span class="text-zinc-400 font-bold text-[10px] block mb-1.5">⚡ 自动巡航切页</span>
@@ -174,38 +160,34 @@
                 </div>
             </div>
 
-            <!-- 快切导航按钮组 -->
             <div class="flex flex-col gap-1.5">
                 <label class="text-zinc-400 font-black text-[10px] tracking-wider">⏩ 章节快切 (1-9)</label>
                 <div class="grid grid-cols-5 gap-2 mt-1" id="quick-jump-container"></div>
             </div>
-            <div class="text-[9px] text-zinc-600 text-center pt-1">⚡ 语音基于 EdgeTTS 官方代理 · 高保真低延迟</div>
         </div>
     </div>
 
     <script>
-        // --------------------------------------------------------------
-        // 2026 顶级 Agent 框架数据 (中英混读专业文案)
-        // --------------------------------------------------------------
+        // 数据
         const CARD_DATA = [
-            { tag: "2026 趋势 / 榜首对决", title: "Agent 选型圣经", hook: "主流大厂架构图谱·最新风向", desc: "LangGraph、LlamaIndex、AutoGen、CrewAI 旗舰对比，2026年JetBrains官方白皮书独家解读。", prompter: "各位AI架构师，别再盲目选型了。2026年顶级Agent框架正式洗牌，今天用九张王牌卡片带你理清最强工具链，中英文混合术语例如 LangGraph 和 RAG 都能流畅朗读。" },
-            { tag: "01 · 工业级一姐", title: "LangGraph", hook: "复杂工作流 · 强如石墨烯", desc: "显式图结构 + 人机回环，超细粒度状态控制。生产环境首选，拒绝失控链条！", prompter: "LangGraph 已经统治大厂生产环境，如果你的系统需要多步骤状态回溯或者严密的人机协同，直接无脑选它。它支持 HITL 人机协作，完美适合企业级 Agent。" },
-            { tag: "02 · RAG 底座之王", title: "LlamaIndex", hook: "私有知识库 · 检索即正义", desc: "结构化数据打通一切，本地PDF、数据库、混合检索极致精准。RAG领域绝对标杆。", prompter: "LlamaIndex 是 RAG 赛道的绝对王者，从本地文档到向量数据库，它能以最高精度检索你的私有知识，同时完美集成 Chroma 和 Pinecone，不用犹豫。" },
-            { tag: "03 · 企业精密管道", title: "Haystack", hook: "稳定压倒一切", desc: "高度模块化Pipeline，数据路由与评估器极苛刻，适合金融/医疗级容错场景。", prompter: "企业级应用稳定性就是生命线，Haystack 提供的管道架构拥有最严谨的可控性，保障你的 AI 应用永不脱轨，支持 RESTful 微服务部署。" },
-            { tag: "04 · 多智能体戏精", title: "AutoGen", hook: "角色辩论 · 协作闭环", desc: "微软出品，让多个AI互相争辩达成共识，复杂任务在对话中自行解决。", prompter: "想让多个智能体替你开会、辩论并产出最终决策？AutoGen 就是你的硅基团队，复杂逻辑自行消解，支持 GPT-4 级别的多智能体协作。" },
-            { tag: "05 · 特种兵KPI", title: "CrewAI", hook: "目标必达 · 极致执行", desc: "每个Agent拥有明确职级与KPI，强目标导向，适合商业流程自动化。", prompter: "背 KPI 的 AI 特种兵 CrewAI，把真实职场搬进代码，每个 Agent 背负使命必达的任务，效率拉满，适合营销和自动化运营。" },
-            { tag: "06 · 极速原型机", title: "LangChain", hook: "生态无敌 · 快速落地", desc: "集成海量组件，15分钟跑通Demo，黑客松&初创团队首选。", prompter: "LangChain 依然是验证想法最快的框架，不用纠结性能，15 分钟就能让创意飞起来，生态丰富到令人发指，集成数百种工具。" },
-            { tag: "07 · 2026 血泪避坑", title: "失控警报", hook: "九成Agent死于链条地狱", desc: "拒绝无约束开放式链条！生产环境必用图结构或管道，否则用户随机输入直接死循环。", prompter: "大厂血的教训：任何无向链条最终都会导致 Agent 失控。想要部署到生产环境，强制结构比如 LangGraph 才是唯一解，千万别再用纯 Chain。" },
-            { tag: "08 · 闭眼选型总结", title: "终极决策表", hook: "一图看懂最终抉择", desc: "流程控制→LangGraph | RAG→LlamaIndex | 多智能体→AutoGen | 快速原型→LangChain", prompter: "最后帮你总结：复杂流程 LangGraph，文档 RAG 选 LlamaIndex，多智能体 AutoGen，快速玩票 LangChain。收藏这个榜单，选型不再迷茫！" }
+            { tag: "2026 趋势 / 榜首对决", title: "Agent 选型圣经", hook: "主流大厂架构图谱·最新风向", desc: "LangGraph、LlamaIndex、AutoGen、CrewAI 旗舰对比", prompter: "各位AI架构师，别再盲目选型了。2026年顶级Agent框架正式洗牌，LangGraph、LlamaIndex、AutoGen、CrewAI，今天带你理清最强工具链。" },
+            { tag: "01 · 工业级一姐", title: "LangGraph", hook: "复杂工作流 · 强如石墨烯", desc: "显式图结构 + 人机回环，超细粒度状态控制。", prompter: "LangGraph已经统治大厂生产环境，如果你的系统需要多步骤状态回溯，直接选它。支持HITL人机协同，完美适合企业级Agent。" },
+            { tag: "02 · RAG 底座之王", title: "LlamaIndex", hook: "私有知识库 · 检索即正义", desc: "结构化数据打通一切，本地PDF、数据库、混合检索极致精准。", prompter: "LlamaIndex是RAG赛道的绝对王者，从本地文档到向量数据库，它能以最高精度检索你的私有知识，不用犹豫。" },
+            { tag: "03 · 企业精密管道", title: "Haystack", hook: "稳定压倒一切", desc: "高度模块化Pipeline，数据路由与评估器极苛刻。", prompter: "企业级应用稳定性就是生命线，Haystack提供的管道架构拥有最严谨的可控性，保障你的AI应用永不脱轨。" },
+            { tag: "04 · 多智能体戏精", title: "AutoGen", hook: "角色辩论 · 协作闭环", desc: "微软出品，让多个AI互相争辩达成共识。", prompter: "想让多个智能体替你开会、辩论并产出最终决策？AutoGen就是你的硅基团队，复杂逻辑自行消解。" },
+            { tag: "05 · 特种兵KPI", title: "CrewAI", hook: "目标必达 · 极致执行", desc: "每个Agent拥有明确职级与KPI，强目标导向。", prompter: "背KPI的AI特种兵CrewAI，把真实职场搬进代码，每个Agent背负使命必达的任务，效率拉满。" },
+            { tag: "06 · 极速原型机", title: "LangChain", hook: "生态无敌 · 快速落地", desc: "集成海量组件，15分钟跑通Demo。", prompter: "LangChain依然是验证想法最快的框架，15分钟就能让创意飞起来，生态丰富到令人发指。" },
+            { tag: "07 · 2026 血泪避坑", title: "失控警报", hook: "九成Agent死于链条地狱", desc: "拒绝无约束开放式链条！生产环境必用图结构。", prompter: "大厂血的教训：任何无向链条最终都会导致Agent失控。想要部署到生产环境，强制结构比如LangGraph才是唯一解。" },
+            { tag: "08 · 闭眼选型总结", title: "终极决策表", hook: "一图看懂最终抉择", desc: "流程控制→LangGraph | RAG→LlamaIndex | 多智能体→AutoGen", prompter: "最后帮你总结：复杂流程LangGraph，文档RAG选LlamaIndex，多智能体AutoGen，快速玩票LangChain。收藏这个榜单，选型不再迷茫。" }
         ];
 
         let currentIndex = 0;
         let isTransitioning = false;
         let autoplayInterval = null;
         let isControllerExpanded = false;
-        let isAudioReady = true;    // 无需解锁，直接可用
-        let selectedVoice = 'zh-CN-YunxiNeural';   // 默认云希男声 (EdgeTTS 官方声线)
-        let currentAudio = null;    // 用于中断前一个语音
+        let currentUtterance = null;
+        let preferredGender = 'male'; // 'male' or 'female'
+        let speechVoices = [];
 
         // DOM 元素
         const mainClickArea = document.getElementById('main-click-area');
@@ -223,78 +205,109 @@
         const teleprompterNum = document.getElementById('teleprompter-num');
         const speakingWave = document.getElementById('speaking-wave');
 
-        // --------------------------------------------------------------
-        // EdgeTTS 免费高保真核心 (直接调用微软官方代理，无需安装任何浏览器)
-        // 使用公共 CORS 代理实现纯净调用，支持中英混读，音质媲美 Azure 神经网络
-        // --------------------------------------------------------------
-        async function speakCurrentCard(text) {
-            if (!isAudioReady) return;
-            // 中断之前正在播放的语音
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-            try {
-                // 采用社区维护的高可用 EdgeTTS 代理 (基于微软官方API, 完全免费, 支持中英文混读)
-                // 为了稳定性，使用多个备用代理源，优先使用快速节点
-                const proxyUrl = `https://edge-tts.vercel.app/api/tts?text=${encodeURIComponent(text)}&voice=${selectedVoice}&rate=1.15`;
-                // 备用代理2：render 稳定节点 (如果vercel被墙可自动切换，此处仅用稳定主源)
-                const fallbackUrl = `https://edge-tts-proxy.onrender.com/api/tts?text=${encodeURIComponent(text)}&voice=${selectedVoice}&rate=1.15`;
-                
-                let response = await fetch(proxyUrl, { method: 'GET' });
-                if (!response.ok) {
-                    // 主源失败尝试备用
-                    response = await fetch(fallbackUrl, { method: 'GET' });
+        // 获取可用语音
+        function loadVoices() {
+            return new Promise((resolve) => {
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length) {
+                    speechVoices = voices;
+                    resolve(voices);
+                } else {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        speechVoices = window.speechSynthesis.getVoices();
+                        resolve(speechVoices);
+                    };
                 }
-                if (!response.ok) throw new Error('EdgeTTS 请求失败');
-                
-                const audioBlob = await response.blob();
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audio = new Audio(audioUrl);
-                currentAudio = audio;
-                
-                // 波动动画控制
-                audio.onplay = () => {
-                    if(speakingWave) speakingWave.classList.remove('hidden');
-                };
-                audio.onended = () => {
-                    if(speakingWave) speakingWave.classList.add('hidden');
-                    URL.revokeObjectURL(audioUrl);
-                    if(currentAudio === audio) currentAudio = null;
-                };
-                audio.onerror = () => {
-                    if(speakingWave) speakingWave.classList.add('hidden');
-                    URL.revokeObjectURL(audioUrl);
-                    if(currentAudio === audio) currentAudio = null;
-                };
-                await audio.play();
-            } catch (err) {
-                console.warn("EdgeTTS 语音加载失败，使用系统降级: ", err);
-                if(speakingWave) speakingWave.classList.add('hidden');
-                // 静默失败，不打断录屏体验
-            }
+            });
         }
 
-        // 切换云端音色 (立即生效)
-        window.setCloudVoice = (e, voiceName) => {
-            if (e) e.stopPropagation();
-            selectedVoice = voiceName;
-            const btnYunxi = document.getElementById('voice-yunxi');
-            const btnXiaoxiao = document.getElementById('voice-xiaoxiao');
-            if (voiceName === 'zh-CN-YunxiNeural') {
-                btnYunxi.className = "bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all";
-                btnXiaoxiao.className = "bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700";
+        // 根据性别选择最佳中文语音
+        function getBestVoice(gender) {
+            const zhVoices = speechVoices.filter(v => v.lang.startsWith('zh'));
+            if (gender === 'male') {
+                // 优先选择男声：通常包含 Yunxi, Daniel, Kangkang, 或 name 不包含 Tingting/Xiaoxiao
+                const maleVoice = zhVoices.find(v => 
+                    v.name.includes('Yunxi') || v.name.includes('Daniel') || 
+                    v.name.includes('Kangkang') || v.name.includes('Guy')
+                );
+                if (maleVoice) return maleVoice;
+                // 回退: 选第一个非 Tingting 的
+                const notFemale = zhVoices.find(v => !v.name.includes('Ting') && !v.name.includes('Xiao'));
+                if (notFemale) return notFemale;
             } else {
-                btnXiaoxiao.className = "bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all";
-                btnYunxi.className = "bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700";
+                // 女声优先 Xiaoxiao, Tingting, Yaoyao
+                const femaleVoice = zhVoices.find(v => 
+                    v.name.includes('Xiaoxiao') || v.name.includes('Tingting') || 
+                    v.name.includes('Yaoyao') || v.name.includes('Hanhan')
+                );
+                if (femaleVoice) return femaleVoice;
             }
-            // 重新朗读当前页内容，让音色即时生效
+            // 最终回退: 任何中文语音
+            if (zhVoices.length) return zhVoices[0];
+            // 超回退: 英文语音
+            return speechVoices.find(v => v.lang.startsWith('en')) || null;
+        }
+
+        // 核心语音函数 - 使用 Web Speech API
+        function speakText(text) {
+            if (!text) return;
+            
+            // 停止当前正在播放的语音
+            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                window.speechSynthesis.cancel();
+            }
+            if (currentUtterance) {
+                window.speechSynthesis.cancel();
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1.05;
+            utterance.pitch = 1.0;
+            utterance.volume = 1;
+
+            // 设置语音
+            const bestVoice = getBestVoice(preferredGender);
+            if (bestVoice) utterance.voice = bestVoice;
+
+            // 波动动画
+            utterance.onstart = () => {
+                if (speakingWave) speakingWave.classList.remove('hidden');
+            };
+            utterance.onend = () => {
+                if (speakingWave) speakingWave.classList.add('hidden');
+                currentUtterance = null;
+            };
+            utterance.onerror = () => {
+                if (speakingWave) speakingWave.classList.add('hidden');
+                currentUtterance = null;
+            };
+
+            currentUtterance = utterance;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 切换性别
+        window.setVoiceGender = (e, gender) => {
+            if (e) e.stopPropagation();
+            preferredGender = gender;
+            const maleBtn = document.getElementById('voice-male');
+            const femaleBtn = document.getElementById('voice-female');
+            
+            if (gender === 'male') {
+                maleBtn.className = "bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all";
+                femaleBtn.className = "bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700";
+            } else {
+                femaleBtn.className = "bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all";
+                maleBtn.className = "bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700";
+            }
+            
+            // 重新朗读当前内容
             if (CARD_DATA[currentIndex]) {
-                speakCurrentCard(CARD_DATA[currentIndex].prompter);
+                speakText(CARD_DATA[currentIndex].prompter);
             }
         };
 
-        // 渲染卡片 + 同步提词器 + 语音触发
         function renderCard(index) {
             const data = CARD_DATA[index];
             cardTag.textContent = data.tag;
@@ -305,7 +318,6 @@
             teleprompterText.textContent = data.prompter;
             teleprompterNum.textContent = `${index + 1} / ${CARD_DATA.length}`;
             
-            // 更新跳转按钮高亮
             document.querySelectorAll('.jump-btn').forEach((btn, idx) => {
                 if (idx === index) {
                     btn.classList.add('bg-yellow-500', 'text-black', 'shadow-md', 'border-yellow-400');
@@ -315,11 +327,10 @@
                     btn.classList.add('bg-zinc-800', 'text-zinc-400');
                 }
             });
-            // 自动朗读提词文本 (云端神经网络)
-            speakCurrentCard(data.prompter);
+            
+            speakText(data.prompter);
         }
 
-        // 页面切换动画 + 数据渲染
         function switchPage(nextIndex) {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -341,7 +352,6 @@
             switchPage((currentIndex + 1) % CARD_DATA.length);
         }
 
-        // 主区域点击切换 (控制器展开时不误触)
         mainClickArea.addEventListener('click', (e) => {
             if (isControllerExpanded) {
                 collapseController();
@@ -350,7 +360,6 @@
             nextPage();
         });
 
-        // 控制台折叠/展开
         window.toggleController = (e) => {
             if (e) e.stopPropagation();
             if (isControllerExpanded) collapseController(); else expandController();
@@ -368,7 +377,6 @@
             controllerArrow.innerHTML = '▲ 展开控制台';
         }
 
-        // 构建快速跳转按钮
         function buildQuickJumpControls() {
             const container = document.getElementById('quick-jump-container');
             container.innerHTML = '';
@@ -383,7 +391,6 @@
                 };
                 container.appendChild(btn);
             });
-            // 高亮当前
             document.querySelectorAll('.jump-btn').forEach((btn, idx) => {
                 if (idx === currentIndex) {
                     btn.classList.add('bg-yellow-500', 'text-black', 'shadow-md', 'border-yellow-400');
@@ -392,7 +399,6 @@
             });
         }
 
-        // 自动巡航切换
         window.toggleAutoplay = (e) => {
             if (e) e.stopPropagation();
             const btn = document.getElementById('btn-autoplay');
@@ -408,7 +414,6 @@
             }
         };
 
-        // 清爽录屏 (HUD开关)
         window.toggleHUD = (e) => {
             if (e) e.stopPropagation();
             const isHidden = hudHeader.classList.contains('opacity-0');
@@ -421,12 +426,12 @@
             }
         };
 
-        // 启动入口
-        window.onload = () => {
+        // 初始化
+        window.onload = async () => {
+            await loadVoices();
             renderCard(0);
             buildQuickJumpControls();
             controller.classList.add('translate-y-[calc(100%-42px)]');
-            // 无需解锁层，开箱即用 EdgeTTS 真云语音
         };
     </script>
 </body>
