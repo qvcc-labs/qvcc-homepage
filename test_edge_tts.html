@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TTS 诊断工具 - Edge TTS 直连版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000; color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px; line-height: 1.6;
+            max-width: 600px; margin: 0 auto;
+        }
+        h1 { color: #39FF14; font-size: 22px; margin-bottom: 8px; border-bottom: 2px solid #39FF14; padding-bottom: 10px; }
+        .subtitle { color: #888; font-size: 12px; margin-bottom: 20px; }
+        .section { background: #111; border: 1px solid #333; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .section-title { color: #FFFF00; font-size: 14px; font-weight: bold; margin-bottom: 10px; }
+        .status-box { font-family: monospace; font-size: 12px; background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px; white-space: pre-wrap; word-break: break-all; color: #ccc; max-height: 200px; overflow-y: auto; }
+        .status-ok { color: #39FF14; } .status-err { color: #FF5F1F; } .status-warn { color: #FFFF00; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: bold; margin-bottom: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .btn-primary { background: #FFFF00; color: #000; } .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background: #222; color: #fff; border: 1px solid #444; }
+        .btn-red { background: #FF5F1F; color: #fff; }
+        .voice-item { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+        .voice-name { color: #39FF14; font-weight: bold; } .voice-lang { color: #888; font-size: 11px; }
+        .tip-box { background: #FF5F1F15; border: 1px solid #FF5F1F; color: #FF5F1F; padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 10px; }
+        .tip-box.green { background: #39FF1415; border-color: #39FF14; color: #39FF14; }
+        #log { font-family: monospace; font-size: 12px; color: #666; margin-top: 10px; max-height: 150px; overflow-y: auto; }
+        .loader { width: 16px; height: 16px; border: 2px solid #FFFF00; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        select { width: 100%; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
+        .progress-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #39FF14; width: 0%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+
+<h1>🔊 TTS 诊断工具</h1>
+<div class="subtitle">华为海外版专用 - 直连微软 Edge TTS（无需系统语音包）</div>
+
+<div class="section">
+    <div class="section-title">📊 系统检测</div>
+    <div class="status-box" id="basic-info">正在检测...</div>
+</div>
+
+<div class="section">
+    <div class="section-title">🎙️ Edge TTS 语音测试</div>
+    
+    <select id="voice-select">
+        <option value="zh-CN-YunxiNeural">🎙️ 云希 - 磁性男声（推荐）</option>
+        <option value="zh-CN-XiaoxiaoNeural">🎙️ 晓晓 - 甜美女声</option>
+        <option value="zh-CN-YunyangNeural">🎙️ 云扬 - 沉稳男声</option>
+        <option value="zh-CN-XiaoyiNeural">🎙️ 晓伊 - 温柔女声</option>
+        <option value="zh-CN-liaoning-XiaobeiNeural">🎙️ 小北 - 东北话</option>
+        <option value="zh-CN-shaanxi-XiaoniNeural">🎙️ 小妮 - 陕西话</option>
+        <option value="zh-HK-HiuMaanNeural">🎙️ 晓曼 - 粤语女声</option>
+        <option value="zh-TW-HsiaoChenNeural">🎙️ 晓臻 - 台湾女声</option>
+        <option value="en-US-GuyNeural">🇺🇸 Guy - 英文男声</option>
+        <option value="ja-JP-NanamiNeural">🇯🇵 七海 - 日语女声</option>
+    </select>
+
+    <button class="btn-primary" onclick="testEdgeTTS()">🚀 测试 Edge TTS 播放</button>
+    <button class="btn-secondary" onclick="testEdgeTTS('你好，这是微软 Edge TTS 的中文语音测试，支持中英混读 LangGraph')">📝 播放长句测试</button>
+    <button class="btn-secondary" onclick="testEdgeTTS('Hello, this is a test. 你好，这是中英混读测试。')">🌐 中英混读测试</button>
+    <button class="btn-red" onclick="stopAudio()">⏹ 停止播放</button>
+    
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div id="log"></div>
+</div>
+
+<div class="section">
+    <div class="section-title">🧪 备用：系统原生 TTS 检测</div>
+    <button class="btn-secondary" onclick="testNativeTTS()">检测系统原生语音</button>
+    <div id="native-voice-list" style="margin-top:10px;"></div>
+</div>
+
+<div class="section">
+    <div class="section-title">💡 诊断结论</div>
+    <div id="conclusion">等待测试...</div>
+</div>
+
+<script>
+const logEl = document.getElementById('log');
+const progressFill = document.getElementById('progress-fill');
+let currentAudio = null;
+
+function log(msg) {
+    logEl.innerHTML += '> ' + msg + '<br>';
+    console.log(msg);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ========== 基础检测 ==========
+function runBasicCheck() {
+    const info = [];
+    info.push('User-Agent: ' + navigator.userAgent.substring(0, 60));
+    info.push('speechSynthesis: ' + ('speechSynthesis' in window));
+    info.push('AudioContext: ' + ('AudioContext' in window));
+    info.push('WebSocket: ' + ('WebSocket' in window));
+    info.push('页面协议: ' + window.location.protocol);
+    document.getElementById('basic-info').textContent = info.join('\n');
+}
+
+// ========== 核心：Edge TTS WebSocket 直连 ==========
+// 这是 edge-tts Python 库底层用的同一个微软接口
+async function testEdgeTTS(customText) {
+    const voice = document.getElementById('voice-select').value;
+    const text = customText || '声音通道已激活，Edge TTS 测试成功';
+    
+    log('🔄 正在连接微软 Edge TTS 服务...');
+    progressFill.style.width = '10%';
+    
+    try {
+        // 1. 获取授权 token（微软的接口需要这个）
+        const tokenRes = await fetch('https://edge.microsoft.com/translate/auth', {
+            method: 'GET',
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        }).catch(() => null);
+        
+        // 如果上面的 token 接口失败，直接用固定格式（edge-tts 库的方式）
+        const endpoint = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1';
+        const trustedClientToken = '6A5AA1D4EAFF4E9FB37E23D68491D6F4';
+        
+        // 构建 SSML（微软要求的格式）
+        const ssml = `
+            <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-CN">
+                <voice name="${voice}">
+                    <prosody pitch="+0Hz" rate="+15%" volume="+0%">
+                        ${escapeXml(text)}
+                    </prosody>
+                </voice>
+            </speak>
+        `.trim();
+
+        // 构建 WebSocket URL
+        const wsUrl = `${endpoint}?TrustedClientToken=${trustedClientToken}&ConnectionId=${generateConnectionId()}`;
+        
+        log('🔄 正在建立 WebSocket 连接...');
+        progressFill.style.width = '30%';
+        
+        const ws = new WebSocket(wsUrl);
+        const audioChunks = [];
+        
+        ws.binaryType = 'arraybuffer';
+        
+        ws.onopen = () => {
+            log('✅ WebSocket 已连接');
+            progressFill.style.width = '50%';
+            
+            // 发送配置请求
+            const configMessage = `X-Timestamp:${new Date().toISOString()}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"true"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
+            ws.send(configMessage);
+            
+            // 发送 SSML
+            const ssmlMessage = `X-Timestamp:${new Date().toISOString()}\r\nContent-Type:application/ssml+xml\r\nPath:ssml\r\n\r\n${ssml}`;
+            ws.send(ssmlMessage);
+            
+            log('📤 已发送语音合成请求');
+            progressFill.style.width = '60%';
+        };
+        
+        ws.onmessage = (event) => {
+            if (typeof event.data === 'string') {
+                // 文本消息（通常是边界标记）
+                if (event.data.includes('Path:turn.end')) {
+                    log('✅ 语音数据接收完成');
+                    progressFill.style.width = '90%';
+                    ws.close();
+                    playAudioChunks(audioChunks);
+                }
+            } else {
+                // 二进制音频数据
+                // 微软的格式：前面有头信息，需要解析
+                const data = new Uint8Array(event.data);
+                // 查找 MP3 头的位置（通常是 0xFF 0xFB 或 0xFF 0xF3）
+                let mp3Start = 0;
+                for (let i = 0; i < data.length - 1; i++) {
+                    if (data[i] === 0xFF && (data[i+1] === 0xFB || data[i+1] === 0xF3 || data[i+1] === 0xF2)) {
+                        mp3Start = i;
+                        break;
+                    }
+                }
+                if (mp3Start < data.length) {
+                    audioChunks.push(data.slice(mp3Start));
+                }
+            }
+        };
+        
+        ws.onerror = (err) => {
+            log('❌ WebSocket 错误: ' + err.type);
+            progressFill.style.width = '0%';
+            updateConclusion('edge-fail');
+        };
+        
+        ws.onclose = () => {
+            if (audioChunks.length === 0) {
+                log('⚠️ 未收到音频数据');
+                // 尝试备用方案
+                tryBackupTTS(text, voice);
+            }
+        };
+        
+    } catch (err) {
+        log('❌ 错误: ' + err.message);
+        tryBackupTTS(text, voice);
+    }
+}
+
+// 备用方案：使用第三方 Edge TTS 代理
+async function tryBackupTTS(text, voice) {
+    log('🔄 尝试备用代理...');
+    
+    // 备用代理列表（这些是基于 edge-tts 的公开代理）
+    const proxies = [
+        `https://tts.131213.xyz/api/tts?text=${encodeURIComponent(text)}&voice=${voice}&rate=15`,
+        `https://api.yyxx.website/tts?text=${encodeURIComponent(text)}&voice=${voice}&rate=15`,
+    ];
+    
+    for (const url of proxies) {
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const blob = await response.blob();
+                log('✅ 备用代理成功');
+                playAudioBlob(blob);
+                updateConclusion('backup-ok');
+                return;
+            }
+        } catch (e) {
+            continue;
+        }
+    }
+    
+    log('❌ 所有备用代理均失败');
+    updateConclusion('all-fail');
+}
+
+function playAudioChunks(chunks) {
+    if (chunks.length === 0) return;
+    
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+    }
+    
+    const blob = new Blob([combined], { type: 'audio/mpeg' });
+    playAudioBlob(blob);
+    updateConclusion('edge-ok');
+}
+
+function playAudioBlob(blob) {
+    stopAudio();
+    
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    
+    currentAudio.onplay = () => {
+        log('▶️ 开始播放');
+        progressFill.style.width = '100%';
+    };
+    currentAudio.onended = () => {
+        log('✅ 播放结束');
+        progressFill.style.width = '0%';
+        URL.revokeObjectURL(url);
+    };
+    currentAudio.onerror = (e) => {
+        log('❌ 播放错误');
+        progressFill.style.width = '0%';
+    };
+    
+    currentAudio.play().catch(err => {
+        log('❌ 播放失败: ' + err.message);
+    });
+}
+
+function stopAudio() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+    progressFill.style.width = '0%';
+}
+
+function generateConnectionId() {
+    return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+function escapeXml(str) {
+    return str.replace(/[<>&'"]/g, c => ({
+        '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;'
+    })[c]);
+}
+
+// ========== 原生 TTS 检测 ==========
+function testNativeTTS() {
+    const listEl = document.getElementById('native-voice-list');
+    
+    if (!('speechSynthesis' in window)) {
+        listEl.innerHTML = '<div class="tip-box">❌ 浏览器不支持 Web Speech API</div>';
+        return;
+    }
+    
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoices = voices.filter(v => v.lang.includes('zh'));
+    
+    let html = `<div style="color:#888; font-size:12px; margin-bottom:8px;">检测到 ${voices.length} 个语音，其中 ${zhVoices.length} 个中文</div>`;
+    
+    if (zhVoices.length === 0) {
+        html += '<div class="tip-box">⚠️ 无中文语音包 — 这就是华为海外版没声音的原因</div>';
+    } else {
+        zhVoices.forEach(v => {
+            html += `<div class="voice-item"><span class="voice-name">${v.name}</span> <span class="voice-lang">${v.lang}</span></div>`;
+        });
+    }
+    
+    listEl.innerHTML = html;
+}
+
+// ========== 结论更新 ==========
+function updateConclusion(status) {
+    const el = document.getElementById('conclusion');
+    const messages = {
+        'edge-ok': '<div class="tip-box green">✅ <b>Edge TTS 直连成功！</b><br><br>你的设备可以通过微软 Edge TTS 服务播放中文语音，无需安装系统语音包。建议在大字报工具中使用此方案。</div>',
+        'backup-ok': '<div class="tip-box green">✅ <b>备用代理可用</b><br><br>WebSocket 直连失败，但第三方代理可用。稳定性一般，建议优先修复 WebSocket 连接。</div>',
+        'edge-fail': '<div class="tip-box">⚠️ <b>Edge TTS 连接失败</b><br><br>可能原因：<br>1. 网络限制（需翻墙）<br>2. WebSocket 被拦截<br>3. 微软接口更新<br><br>尝试点击"测试 Edge TTS 播放"再次测试。</div>',
+        'all-fail': '<div class="tip-box">❌ <b>所有方案均失败</b><br><br>建议：<br>1. 检查网络连接<br>2. 尝试使用 VPN<br>3. 使用预录 MP3 方案</div>'
+    };
+    el.innerHTML = messages[status] || messages['all-fail'];
+}
+
+// ========== 初始化 ==========
+window.onload = function() {
+    runBasicCheck();
+    
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            // 语音列表加载完成
+        };
+        setTimeout(testNativeTTS, 500);
+    }
+};
+</script>
+
+</body>
+</html>
