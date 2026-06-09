@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full select-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>2026 顶级 Agent 框架大盘点 - 录屏大字报</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neonGreen: '#39FF14',
+                        neonYellow: '#FFFF00',
+                        neonOrange: '#FF5F1F',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body {
+            background-color: #000000;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            overscroll-behavior: none;
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        .card-container {
+            perspective: 1000px;
+        }
+        .card-transition {
+            transition: transform 140ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 140ms ease-out;
+        }
+        .card-exit {
+            transform: translate(-40px, -20px) rotate(-2deg) scale(0.92);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .card-enter-prep {
+            transform: translate(50px, 30px) rotate(3deg) scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .card-active {
+            transform: translate(0, 0) rotate(0deg) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .click-flash {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 0, 0.15);
+            transform: scale(0);
+            animation: flash-ripple 200ms cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            pointer-events: none;
+        }
+        @keyframes flash-ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+        .wave-bar {
+            display: inline-block;
+            width: 3px;
+            height: 10px;
+            background-color: #FFFF00;
+            margin: 0 1px;
+            animation: bounce 0.6s infinite alternate;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        @keyframes bounce {
+            from { height: 4px; }
+            to { height: 16px; }
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center text-white relative">
+
+    <div class="absolute inset-0 bg-black z-0"></div>
+
+    <div id="audio-unlocker-overlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/95 px-6 text-center">
+        <div class="w-full max-w-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col items-center">
+            <span class="text-4xl mb-3">🔊</span>
+            <h2 class="text-base font-black text-white tracking-wide">检测到移动端安全限制</h2>
+            <p class="text-zinc-400 text-xs mt-2 mb-5 leading-relaxed">
+                微信或手机系统默认拦截网页自动发声。请点击下方激活按钮解锁音频通道。
+            </p>
+            <button onclick="forceUnlockAudioDevice(event)" class="w-full bg-neonYellow text-black font-black py-3 rounded-xl text-sm tracking-widest active:scale-95 transition-transform shadow-lg shadow-yellow-500/10">
+                🚀 激活全自动口播
+            </button>
+            <p class="text-[10px] text-zinc-600 mt-3">激活后请确保手机未处于静音或勿扰模式</p>
+        </div>
+    </div>
+
+    <main id="main-click-area" class="w-full h-full max-w-md flex flex-col justify-between px-6 pt-12 pb-24 z-10 relative cursor-pointer">
+        
+        <header class="w-full flex justify-between items-center text-xs text-zinc-600 transition-opacity duration-300" id="hud-header">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                <span class="tracking-widest font-mono">REC 9:16 PORTRAIT</span>
+            </div>
+            <div class="font-mono" id="hud-counter">1 / 10</div>
+        </header>
+
+        <div class="card-container w-full flex items-center justify-center my-auto" style="height: 440px;">
+            <div id="card-element" class="card-transition card-active w-full bg-zinc-950/40 border border-zinc-900 rounded-2xl p-6 flex flex-col justify-between shadow-2xl relative overflow-hidden" style="height: 100%;">
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <span id="card-tag" class="text-neonYellow font-black tracking-widest text-xs md:text-sm uppercase bg-neonYellow/10 px-3 py-1 rounded">
+                        TRENDS / 趋势
+                    </span>
+                    <h1 id="card-title" class="text-3xl md:text-4xl font-black text-white tracking-tight mt-5 leading-tight">
+                        AI Agent
+                    </h1>
+                </div>
+
+                <div id="card-hook" class="border-l-8 border-neonOrange bg-neonOrange/10 pl-4 py-3 my-3 relative z-10">
+                    <p class="text-lg md:text-xl font-black text-white leading-snug">
+                        别再瞎选了！JetBrains 官方发布终极指南
+                    </p>
+                </div>
+
+                <div class="relative z-10">
+                    <p id="card-desc" class="text-zinc-400 text-xs md:text-sm leading-relaxed font-medium">
+                        LangGraph、LlamaIndex、Haystack 怎么挑？一文看清 2026 最强 AI Agent 引擎！
+                    </p>
+                </div>
+
+                <div id="card-audit" class="absolute bottom-2 right-4 text-[9px] text-zinc-700 font-mono tracking-wider">
+                    [用A: JetBrains 2026 官方研报]
+                </div>
+            </div>
+        </div>
+
+        <footer class="w-full flex flex-col items-center gap-3 z-10" id="hud-footer">
+            <p id="click-tip" class="text-zinc-600 text-xs tracking-widest text-center animate-pulse">
+                👇 点击屏幕任意位置「瞬切下一页」
+            </p>
+        </footer>
+    </main>
+
+    <div id="recording-controller" class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/98 border-t border-x border-zinc-800 rounded-t-2xl flex flex-col shadow-2xl transition-all duration-300 w-full max-w-md translate-y-[calc(100%-36px)]">
+        
+        <button onclick="toggleController(event)" class="w-full h-9 flex items-center justify-between px-6 bg-zinc-900 rounded-t-2xl border-b border-zinc-800/80 active:bg-zinc-800 transition-colors">
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-neonYellow animate-ping"></span>
+                <span class="text-[11px] font-black tracking-widest text-zinc-300 font-mono">🎙️ 自动口播与提词控制台</span>
+            </div>
+            <span id="controller-arrow" class="text-xs text-zinc-500 font-bold transition-transform duration-300">▲ 点击展开面板</span>
+        </button>
+
+        <div class="p-5 flex flex-col gap-4 text-xs">
+            <div class="bg-zinc-900 border border-zinc-800 p-3 rounded-lg flex flex-col gap-1">
+                <div class="flex justify-between items-center text-[10px] text-neonYellow font-mono font-bold">
+                    <span class="flex items-center gap-1">
+                        📢 实时口播文本同步
+                        <span id="speaking-wave" class="hidden">
+                            <span class="wave-bar"></span>
+                            <span class="wave-bar"></span>
+                            <span class="wave-bar"></span>
+                            <span class="wave-bar"></span>
+                        </span>
+                    </span>
+                    <span id="teleprompter-num">1 / 10</span>
+                </div>
+                <p id="teleprompter-text" class="text-zinc-200 text-xs md:text-sm font-semibold leading-relaxed mt-1">
+                    正在加载提词...
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-400 font-bold mb-1">自动口播(TTS)：</span>
+                    <button id="btn-voiceover" onclick="toggleVoiceover(event)" class="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300 border border-yellow-500/50 py-1.5 rounded-lg font-bold transition-all text-center">已开启(点击可关闭)</button>
+                </div>
+                <div class="flex flex-col gap-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-400 font-bold mb-1">自动巡航切页：</span>
+                    <button id="btn-autoplay" onclick="toggleAutoplay(event)" class="bg-red-950 hover:bg-red-900 text-red-400 border border-red-800 py-1.5 rounded-lg font-bold transition-all text-center">开启</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label class="text-zinc-400 font-bold">快切卡片（测试与复录专用）：</label>
+                <div class="grid grid-cols-5 gap-1.5 mt-1" id="quick-jump-container"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-1 pt-3 border-t border-zinc-900">
+                <div class="flex items-center justify-between bg-zinc-900/60 p-2 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-400 font-medium">清爽无字录屏：</span>
+                    <button onclick="toggleHUD(event)" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-1 rounded font-bold transition-all">隐藏HUD</button>
+                </div>
+                <div class="flex items-center justify-between bg-zinc-900/60 p-2 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-400 font-medium">强制终止发声：</span>
+                    <button onclick="stopSpeaking(event)" class="bg-red-950 hover:bg-red-900 text-red-400 px-3 py-1 rounded font-bold transition-all">立刻静音</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CARD_DATA = [
+            {
+                tag: "2026 TRENDS / 时代风向",
+                title: "AI AGENT 选型",
+                hook: "全网最强盘点！大厂在用什么框架？",
+                desc: "LangGraph、LlamaIndex、Haystack...别再看两年前的老教程了，JetBrains 2026 最新官方白皮书，带你避开所有坑！",
+                prompter: "还在乱选框架？JetBrains 官方发布了 2026 最强 AI Agent 框架盘点！10页干货，直接把选型给你讲透！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "01 / 工业级一姐",
+                title: "LangGraph",
+                hook: "只要涉及复杂状态，别犹豫，直接闭眼入！",
+                desc: "用显式“图结构”彻底终结模糊链条。支持超精密人机协同（HITL），对状态、回滚有变态般掌控力，工业级生产绝对核心！",
+                prompter: "大厂落地首选是谁？无可争议的 LangGraph！显式图结构，专治工作流失控，需要人机协同的工业项目直接选它！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "02 / RAG 大脑级底座",
+                title: "LlamaIndex",
+                hook: "重度私有知识库，它是绝对的检索之王！",
+                desc: "数据结构化大师！将复杂的本地 PDF、数据库、向量和混合检索无缝打通。只要你的 AI 依赖外部私有资料，不用怀疑就是它！",
+                prompter: "做知识库和 RAG 怎么挑？LlamaIndex 依然是王牌！别用通用框架，用它才能把本地文档检索做到极致精度！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "03 / 企业级精密管道",
+                title: "Haystack",
+                hook: "追求极致稳定性，给生产环境上个保险！",
+                desc: "采用高度模块化的 Pipeline（管道）架构。对数据路由、索引器和评估器有着极其严苛的流式控权，专为不容出错的企业定制。",
+                prompter: "企业项目不容许一丁点失误？选 Haystack 吧。极强的管道架构和模块化设计，给你的生产级 RAG 装上防爆阀！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "04 / 角色扮演戏精",
+                title: "AutoGen",
+                hook: "智能体多向辩论，复杂逻辑在聊天中解决！",
+                desc: "微软王牌！完美的角色驱动多智能体（Multi-Agent）框架。模拟真实人类团队，让几个 Agent 互相争辩、达成共识，自己搞定复杂任务！",
+                prompter: "一个人干完一个公司的活？微软的 AutoGen 来帮你。多智能体协作、互相辩论，自己就能在聊天中完成高难度逻辑闭环！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "05 / 目标突击特种兵",
+                title: "CrewAI",
+                hook: "背负 KPI 干活，高执行力目标驱使者！",
+                desc: "把真实职场架构搬进 AI。每个 Agent 都有明确岗位和 KPI，目标极其导向，适合需要强执行、快速推进的具体业务。",
+                prompter: "想要一队高效的 AI 特种兵？选 CrewAI！完全复刻真实职场，背着 KPI 去执行任务，分工极度明确，目标必达！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "06 / 快速概念验证",
+                title: "LangChain",
+                hook: "生态无敌！15分钟跑通你脑洞的神器！",
+                desc: "虽然在复杂状态控制上饱受诟病，但集成了最丰富的工具和极客生态。15 分钟闭眼跑通 Demo，初创产品和黑客松不二之选。",
+                prompter: "想快速跑通 Demo 吹牛？那还得是 LangChain！虽然它被吐槽臃肿，但生态无人能敌，15分钟内让你的想法落地跑起来！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "07 / 2026 落地避坑指南",
+                title: "大厂血泪：乱配链条",
+                hook: "痛点：九成以上的 Agent，最后死于失控！",
+                desc: "警告：绝对不要依赖无图约束的开放式链条（Chains），否则在生产环境里，用户的随机输入会让你的 Agent 陷入死循环地狱！",
+                prompter: "大厂 2026 的避坑指南：千万别再乱配无约束的链条了！九成的 Agent 生产失控，就是因为没有强制图结构约束！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "08 / 局势终极总结",
+                title: "一句话闭眼选",
+                hook: "别纠结了！核心决策直接看这里：",
+                desc: "流式控制与人机协作选 LangGraph；私有 RAG 选 LlamaIndex；角色争辩选 AutoGen；特种兵目标导向选 CrewAI；快速玩票选 LangChain！",
+                prompter: "最后帮大家总结：复杂工作流选 LangGraph，重文档选 LlamaIndex，多智能体用 AutoGen，极客玩票用 LangChain，收藏关注下期见！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            },
+            {
+                tag: "09 / 互动彩蛋",
+                title: "AI 时代你在哪？",
+                hook: "你的项目正在使用哪个 Agent 框架？",
+                desc: "在评论区留下你正在使用的框架，我们一起探讨 2026 年最强 AI 工作流，点赞关注，后台私信送完整 PDF 白皮书！",
+                prompter: "大家在做项目都在用什么框架？欢迎在评论区留下名字。点赞并关注，我们评论区深度交流，后台见！",
+                audit: "[用A: JetBrains 2026 官方研报]"
+            }
+        ];
+
+        let currentIndex = 0;
+        let isTransitioning = false;
+        let autoplayInterval = null;
+        let isControllerExpanded = false;
+        let isVoiceoverEnabled = true; 
+        let isAudioUnlocked = false; 
+
+        const mainClickArea = document.getElementById('main-click-area');
+        const cardElement = document.getElementById('card-element');
+        const cardTag = document.getElementById('card-tag');
+        const cardTitle = document.getElementById('card-title');
+        const cardHook = document.getElementById('card-hook');
+        const cardDesc = document.getElementById('card-desc');
+        const cardAudit = document.getElementById('card-audit');
+        const hudCounter = document.getElementById('hud-counter');
+
+        const hudHeader = document.getElementById('hud-header');
+        const hudFooter = document.getElementById('hud-footer');
+        const controller = document.getElementById('recording-controller');
+        const controllerArrow = document.getElementById('controller-arrow');
+        
+        const teleprompterText = document.getElementById('teleprompter-text');
+        const teleprompterNum = document.getElementById('teleprompter-num');
+        const speakingWave = document.getElementById('speaking-wave');
+        const btnVoiceover = document.getElementById('btn-voiceover');
+        const unlockerOverlay = document.getElementById('audio-unlocker-overlay');
+
+        function init() {
+            renderCard(0);
+            buildQuickJumpControls();
+        }
+
+        function renderCard(index) {
+            const data = CARD_DATA[index];
+            cardTag.textContent = data.tag;
+            cardTitle.textContent = data.title;
+            cardHook.querySelector('p').textContent = data.hook;
+            cardDesc.textContent = data.desc;
+            cardAudit.textContent = data.audit;
+            hudCounter.textContent = `${index + 1} / ${CARD_DATA.length}`;
+            
+            teleprompterText.textContent = data.prompter;
+            teleprompterNum.textContent = `${index + 1} / ${CARD_DATA.length}`;
+            
+            document.querySelectorAll('.jump-btn').forEach((btn, idx) => {
+                if (idx === index) {
+                    btn.classList.add('bg-zinc-100', 'text-black');
+                    btn.classList.remove('bg-zinc-800', 'text-zinc-400');
+                } else {
+                    btn.classList.remove('bg-zinc-100', 'text-black');
+                    btn.classList.add('bg-zinc-800', 'text-zinc-400');
+                }
+            });
+
+            if (isVoiceoverEnabled && isAudioUnlocked) {
+                speakCurrentCard(data.prompter);
+            }
+        }
+
+        // 终极强行物理点击触发：100% 击穿宿主防线 [训C]
+        function forceUnlockAudioDevice(e) {
+            if (e) e.stopPropagation();
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                
+                // 强制发生物理排空朗读
+                const trigger = new SpeechSynthesisUtterance('声音通道已激活');
+                trigger.lang = 'zh-CN';
+                trigger.volume = 1.0;
+                trigger.rate = 1.1;
+                
+                window.speechSynthesis.speak(trigger);
+                
+                isAudioUnlocked = true;
+                unlockerOverlay.classList.add('hidden'); // 移除蒙层
+                
+                // 延迟一下播放当前卡片
+                setTimeout(() => {
+                    speakCurrentCard(CARD_DATA[currentIndex].prompter);
+                }, 400);
+            } else {
+                alert("该手机浏览器内核彻底屏蔽了 Web Speech 引擎，请更换至原生 Safari 或 Chrome 浏览器。");
+            }
+        }
+
+        function speakCurrentCard(text) {
+            if (!('speechSynthesis' in window) || !isAudioUnlocked) return;
+            
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1.18; // 爆款高频口播语速
+            utterance.pitch = 1.0;
+
+            utterance.onstart = () => { speakingWave.classList.remove('hidden'); };
+            utterance.onend = () => { speakingWave.classList.add('hidden'); };
+            utterance.onerror = () => { speakingWave.classList.add('hidden'); };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopSpeaking(e) {
+            if (e) e.stopPropagation();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            speakingWave.classList.add('hidden');
+        }
+
+        function toggleVoiceover(e) {
+            if (e) e.stopPropagation();
+            isVoiceoverEnabled = !isVoiceoverEnabled;
+            if (isVoiceoverEnabled) {
+                btnVoiceover.textContent = '已开启(点击可关闭)';
+                btnVoiceover.className = 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/50 py-1.5 rounded-lg font-bold text-center';
+                if (isAudioUnlocked) speakCurrentCard(CARD_DATA[currentIndex].prompter);
+            } else {
+                btnVoiceover.textContent = '已关闭(点击可开启)';
+                btnVoiceover.className = 'bg-zinc-800 text-zinc-300 border border-zinc-700 py-1.5 rounded-lg font-bold text-center';
+                stopSpeaking();
+            }
+        }
+
+        function switchPage(nextIndex) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            cardElement.classList.remove('card-active');
+            cardElement.classList.add('card-exit');
+
+            setTimeout(() => {
+                renderCard(nextIndex);
+                currentIndex = nextIndex;
+
+                cardElement.classList.remove('card-exit');
+                cardElement.classList.add('card-enter-prep');
+                void cardElement.offsetWidth;
+                cardElement.classList.remove('card-enter-prep');
+                cardElement.classList.add('card-active');
+
+                setTimeout(() => { isTransitioning = false; }, 140);
+            }, 70); 
+        }
+
+        function nextPage() {
+            switchPage((currentIndex + 1) % CARD_DATA.length);
+        }
+
+        mainClickArea.addEventListener('click', (e) => {
+            if (isControllerExpanded) {
+                collapseController();
+                return;
+            }
+            createFlashEffect(e.clientX, e.clientY);
+            nextPage();
+        });
+
+        function createFlashEffect(x, y) {
+            const flash = document.createElement('div');
+            flash.className = 'click-flash';
+            flash.style.left = `${x - 20}px`;
+            flash.style.top = `${y - 20}px`;
+            flash.style.width = '40px';
+            flash.style.height = '40px';
+            document.body.appendChild(flash);
+            flash.addEventListener('animationend', () => { flash.remove(); });
+        }
+
+        function toggleController(e) {
+            if (e) e.stopPropagation();
+            if (isControllerExpanded) collapseController(); else expandController();
+        }
+
+        function expandController() {
+            isControllerExpanded = true;
+            controller.classList.remove('translate-y-[calc(100%-36px)]');
+            controller.classList.add('translate-y-0');
+            controllerArrow.textContent = '▼ 点击收起面板';
+        }
+
+        function collapseController() {
+            isControllerExpanded = false;
+            controller.classList.remove('translate-y-0');
+            controller.classList.add('translate-y-[calc(100%-36px)]');
+            controllerArrow.textContent = '▲ 点击展开面板';
+        }
+
+        function buildQuickJumpControls() {
+            const container = document.getElementById('quick-jump-container');
+            container.innerHTML = '';
+            CARD_DATA.forEach((_, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `jump-btn bg-zinc-800 text-zinc-400 font-bold py-1.5 rounded text-center text-[10px]`;
+                btn.textContent = `${idx + 1}`;
+                btn.onclick = (e) => { e.stopPropagation(); switchPage(idx); };
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleAutoplay(e) {
+            if (e) e.stopPropagation();
+            const btn = document.getElementById('btn-autoplay');
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+                autoplayInterval = null;
+                btn.textContent = '开启';
+                btn.className = 'bg-red-950 text-red-400 border border-red-800 py-1.5 rounded-lg font-bold text-center';
+            } else {
+                autoplayInterval = setInterval(() => { nextPage(); }, 4200);
+                btn.textContent = '停止';
+                btn.className = 'bg-emerald-950 text-emerald-400 border border-emerald-800 py-1.5 rounded-lg font-bold text-center';
+            }
+        }
+
+        function toggleHUD(e) {
+            if (e) e.stopPropagation();
+            const isHidden = hudHeader.classList.contains('opacity-0');
+            if (isHidden) {
+                hudHeader.classList.remove('opacity-0');
+                hudFooter.classList.remove('opacity-0');
+            } else {
+                hudHeader.classList.add('opacity-0');
+                hudFooter.classList.add('opacity-0');
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
