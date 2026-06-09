@@ -143,4 +143,296 @@
                 <div class="flex justify-between items-center text-[10px] text-neonYellow font-mono font-bold">
                     <span class="flex items-center gap-1">
                         📢 实时高保真口播文本
-      
+                        <span id="speaking-wave" class="hidden">
+                            <span class="wave-bar"></span>
+                            <span class="wave-bar"></span>
+                            <span class="wave-bar"></span>
+                            <span class="wave-bar"></span>
+                        </span>
+                    </span>
+                    <span id="teleprompter-num">1 / 9</span>
+                </div>
+                <p id="teleprompter-text" class="text-zinc-200 text-xs font-semibold leading-relaxed mt-1">正在加载提词...</p>
+            </div>
+
+            <!-- 云端音色配置 -->
+            <div class="flex flex-col gap-1.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                <span class="text-zinc-400 font-bold mb-1">选择云端爆款声线（高拟真）：</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="voice-yunxi" onclick="setCloudVoice(event, 'zh-CN-YunxiNeural')" class="bg-neonYellow text-black py-1.5 rounded font-black text-center transition-all">🎙️ 磁性男声 (云希-强烈推荐)</button>
+                    <button id="voice-xiaoxiao" onclick="setCloudVoice(event, 'zh-CN-XiaoxiaoNeural')" class="bg-zinc-800 text-zinc-400 py-1.5 rounded font-bold text-center transition-all hover:bg-zinc-700">🎙️ 甜美女声 (晓晓)</button>
+                </div>
+            </div>
+
+            <!-- 控制台操作 -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-400 font-bold mb-1">自动巡航切页：</span>
+                    <button id="btn-autoplay" onclick="toggleAutoplay(event)" class="bg-red-950 text-red-400 border border-red-800 py-1.5 rounded-lg font-bold text-center">开启</button>
+                </div>
+                <div class="flex flex-col gap-1 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-400 font-bold mb-1">清爽无字录制：</span>
+                    <button onclick="toggleHUD(event)" class="bg-zinc-800 text-zinc-200 py-1.5 rounded-lg font-bold text-center">隐藏/显示HUD</button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <label class="text-zinc-400 font-bold">快切跳转测试：</label>
+                <div class="grid grid-cols-5 gap-1.5 mt-1" id="quick-jump-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 神经网络完美支持的高保真文本数据
+        const CARD_DATA = [
+            {
+                tag: "2026 TRENDS / 时代风向", title: "AI Agent 选型", hook: "全网最强盘点！大厂在用什么框架？", desc: "LangGraph、LlamaIndex、Haystack...别再看两年前的老教程了，JetBrains 2026 最新官方白皮书，带你避开所有坑！",
+                prompter: "还在乱选框架吗？JetBrains 官方发布了 2026 最强 AI Agent 框架盘点！十页干货直接把选型给你讲透！"
+            },
+            {
+                tag: "01 / 工业级一姐", title: "LangGraph", hook: "只要涉及复杂状态，别犹豫，直接闭眼入！", desc: "用显式“图结构”彻底终结模糊链条。支持超精密人机协同（HITL），对状态、回滚有变态般掌控力，工业级生产绝对核心！",
+                prompter: "大厂落地首选是谁？无可争议的 LangGraph！显式图结构专治工作流失控，需要人机协同的工业项目直接选它！"
+            },
+            {
+                tag: "02 / RAG 大脑级底座", title: "LlamaIndex", hook: "重度私有知识库，它是绝对的检索之王！", desc: "数据结构化大师！将复杂的本地 PDF、数据库、向量和混合检索无缝打通。只要你的 AI 依赖外部私有资料，不用怀疑就是它！",
+                prompter: "做知识库和 RAG 怎么挑？LlamaIndex 依然是王牌！别用通用框架，用它才能把本地文档检索做到极致精度！"
+            },
+            {
+                tag: "03 / 企业级精密管道", title: "Haystack", hook: "追求极致稳定性，给生产环境上个保险！", desc: "采用高度模块化的 Pipeline（管道）架构。对数据路由、索引器和评估器有着极其严苛的流式控权，专为不容出错的企业定制。",
+                prompter: "企业项目不容许一丁点失误？选 Haystack 吧。极强的管道架构和模块化设计，给你的生产级 RAG 装上防爆阀！"
+            },
+            {
+                tag: "04 / 角色扮演戏精", title: "AutoGen", hook: "智能体多向辩论，复杂逻辑在聊天中解决！", desc: "微软王牌！完美的角色驱动多智能体（Multi-Agent）框架。模拟真实人类团队，让几个 Agent 互相争辩、达成共识，自己搞定复杂任务！",
+                prompter: "一个人干完一个公司的活？微软的 AutoGen 来帮你。多智能体协作、互相辩论，自己就能在聊天中完成高难度逻辑闭环！"
+            },
+            {
+                tag: "05 / 目标突击特种兵", title: "CrewAI", hook: "背负 KPI 干活，高执行力目标驱使者！", desc: "把真实职场架构搬进 AI。每个 Agent 都有明确岗位和 KPI，目标极其导向，适合需要强执行、快速推进的具体业务。",
+                prompter: "想要一队高效的 AI 特种兵？选 CrewAI！完全复刻真实职场，背着 KPI 去执行任务，分工极度明确，目标必达！"
+            },
+            {
+                tag: "06 / 快速概念验证", title: "LangChain", hook: "生态无敌！15分钟跑通你脑洞的神器！", desc: "虽然在复杂状态控制上饱受诟病，但集成了最丰富的工具和极客生态。15 分钟闭眼跑通 Demo，初创产品 and 黑客松不二之选。",
+                prompter: "想快速跑通 Demo 吹牛？那还得是 LangChain！虽然它被吐槽臃肿，但生态无人能敌，15分钟内让你的想法落地跑起来！"
+            },
+            {
+                tag: "07 / 2026 落地避坑指南", title: "大厂血泪：乱配链条", hook: "痛点：九成以上的 Agent，最后死于失控！", desc: "警告：绝对不要依赖无图约束的开放式链条（Chains），否则在生产环境里，用户的随机输入会让你的 Agent 陷入死循环地狱！",
+                prompter: "大厂 2026 的避坑指南：千万别再乱配无约束的链条了！九成的 Agent 生产失控，就是因为没有强制图结构约束！"
+            },
+            {
+                tag: "08 / 局势终极总结", title: "一句话闭眼选", hook: "别纠结了！核心决策直接看这里：", desc: "流式控制与人机协作选 LangGraph；私有 RAG 选 LlamaIndex；角色争辩选 AutoGen；特种兵目标导向选 CrewAI；快速玩票选 LangChain！",
+                prompter: "最后帮大家总结：复杂工作流选 LangGraph，重文档选 LlamaIndex，多智能体用 AutoGen，极客玩票用 LangChain，收藏关注下期见！"
+            }
+        ];
+
+        let currentIndex = 0;
+        let isTransitioning = false;
+        let autoplayInterval = null;
+        let isControllerExpanded = false;
+        let isAudioUnlocked = false; 
+        let selectedVoice = 'zh-CN-YunxiNeural'; // 默认音色
+
+        const mainClickArea = document.getElementById('main-click-area');
+        const cardElement = document.getElementById('card-element');
+        const cardTag = document.getElementById('card-tag');
+        const cardTitle = document.getElementById('card-title');
+        const cardHook = document.getElementById('card-hook');
+        const cardDesc = document.getElementById('card-desc');
+        const hudCounter = document.getElementById('hud-counter');
+
+        const hudHeader = document.getElementById('hud-header');
+        const hudFooter = document.getElementById('hud-footer');
+        const controller = document.getElementById('recording-controller');
+        const controllerArrow = document.getElementById('controller-arrow');
+        
+        const teleprompterText = document.getElementById('teleprompter-text');
+        const teleprompterNum = document.getElementById('teleprompter-num');
+        const speakingWave = document.getElementById('speaking-wave');
+        const unlockerOverlay = document.getElementById('audio-unlocker-overlay');
+        const forceActiveBtn = document.getElementById('force-active-btn');
+        const globalAudioPlayer = document.getElementById('global-audio-player');
+
+        function init() {
+            renderCard(0);
+            buildQuickJumpControls();
+
+            // 监听音频流状态，实时触发下方动画波动
+            globalAudioPlayer.onplay = () => { speakingWave.classList.remove('hidden'); };
+            globalAudioPlayer.onpause = () => { speakingWave.classList.add('hidden'); };
+            globalAudioPlayer.onended = () => { speakingWave.classList.add('hidden'); };
+            globalAudioPlayer.onerror = () => { speakingWave.classList.add('hidden'); };
+        }
+
+        function renderCard(index) {
+            const data = CARD_DATA[index];
+            cardTag.textContent = data.tag;
+            cardTitle.textContent = data.title;
+            cardHook.textContent = data.hook;
+            cardDesc.textContent = data.desc;
+            hudCounter.textContent = `${index + 1} / ${CARD_DATA.length}`;
+            
+            teleprompterText.textContent = data.prompter;
+            teleprompterNum.textContent = `${index + 1} / ${CARD_DATA.length}`;
+            
+            document.querySelectorAll('.jump-btn').forEach((btn, idx) => {
+                if (idx === index) {
+                    btn.classList.add('bg-zinc-100', 'text-black');
+                    btn.classList.remove('bg-zinc-800', 'text-zinc-400');
+                } else {
+                    btn.classList.remove('bg-zinc-100', 'text-black');
+                    btn.classList.add('bg-zinc-800', 'text-zinc-400');
+                }
+            });
+
+            if (isAudioUnlocked) {
+                speakCurrentCard(data.prompter);
+            }
+        }
+
+        // 强力点击，解锁手机浏览器音频物理限制
+        forceActiveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isAudioUnlocked = true;
+            unlockerOverlay.classList.add('hidden');
+            
+            speakCurrentCard(CARD_DATA[currentIndex].prompter);
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(40);
+            }
+        });
+
+        // HTML5 媒体播放（零英文谐音改写）
+        function speakCurrentCard(text) {
+            if (!isAudioUnlocked) return;
+            
+            globalAudioPlayer.pause();
+            globalAudioPlayer.currentTime = 0;
+
+            const targetRate = "15"; // 高能短视频推荐 1.15 倍语速
+            const audioUrl = `https://api.vvev.com/api/tts?voice=${selectedVoice}&rate=${targetRate}&text=${encodeURIComponent(text)}`;
+            
+            globalAudioPlayer.src = audioUrl;
+
+            const playPromise = globalAudioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("音频加载失败，等待触控", error);
+                });
+            }
+        }
+
+        function setCloudVoice(e, voiceName) {
+            if (e) e.stopPropagation();
+            selectedVoice = voiceName;
+            
+            const btnYunxi = document.getElementById('voice-yunxi');
+            const btnXiaoxiao = document.getElementById('voice-xiaoxiao');
+            
+            if (voiceName === 'zh-CN-YunxiNeural') {
+                btnYunxi.className = 'bg-neonYellow text-black py-1.5 rounded font-black text-center transition-all';
+                btnXiaoxiao.className = 'bg-zinc-800 text-zinc-400 py-1.5 rounded font-bold text-center transition-all hover:bg-zinc-700';
+            } else {
+                btnXiaoxiao.className = 'bg-neonYellow text-black py-1.5 rounded font-black text-center transition-all';
+                btnYunxi.className = 'bg-zinc-800 text-zinc-400 py-1.5 rounded font-bold text-center transition-all hover:bg-zinc-700';
+            }
+
+            if (isAudioUnlocked) {
+                speakCurrentCard(CARD_DATA[currentIndex].prompter);
+            }
+        }
+
+        function switchPage(nextIndex) {
+            if (isTransitioning) return;
+            isTransitioning = true;
+
+            cardElement.classList.remove('card-active');
+            cardElement.classList.add('card-exit');
+
+            setTimeout(() => {
+                renderCard(nextIndex);
+                currentIndex = nextIndex;
+
+                cardElement.classList.remove('card-exit');
+                cardElement.classList.add('card-enter-prep');
+                void cardElement.offsetWidth;
+                cardElement.classList.remove('card-enter-prep');
+                cardElement.classList.add('card-active');
+
+                setTimeout(() => { isTransitioning = false; }, 140);
+            }, 70); 
+        }
+
+        function nextPage() {
+            switchPage((currentIndex + 1) % CARD_DATA.length);
+        }
+
+        mainClickArea.addEventListener('click', (e) => {
+            if (isControllerExpanded) {
+                collapseController();
+                return;
+            }
+            nextPage();
+        });
+
+        function toggleController(e) {
+            if (e) e.stopPropagation();
+            if (isControllerExpanded) collapseController(); else expandController();
+        }
+
+        function expandController() {
+            isControllerExpanded = true;
+            controller.classList.remove('translate-y-[calc(100%-36px)]');
+            controller.classList.add('translate-y-0');
+            controllerArrow.textContent = '▼ 点击收起面板';
+        }
+
+        function collapseController() {
+            isControllerExpanded = false;
+            controller.classList.remove('translate-y-0');
+            controller.classList.add('translate-y-[calc(100%-36px)]');
+            controllerArrow.textContent = '▲ 点击展开面板';
+        }
+
+        function buildQuickJumpControls() {
+            const container = document.getElementById('quick-jump-container');
+            container.innerHTML = '';
+            CARD_DATA.forEach((_, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `jump-btn bg-zinc-800 text-zinc-400 font-bold py-1.5 rounded text-center text-[10px]`;
+                btn.textContent = `${idx + 1}`;
+                btn.onclick = (e) => { e.stopPropagation(); switchPage(idx); };
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleAutoplay(e) {
+            if (e) e.stopPropagation();
+            const btn = document.getElementById('btn-autoplay');
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+                autoplayInterval = null;
+                btn.textContent = '开启';
+                btn.className = 'bg-red-950 text-red-400 border border-red-800 py-1.5 rounded-lg font-bold text-center';
+            } else {
+                autoplayInterval = setInterval(() => { nextPage(); }, 4800); 
+                btn.textContent = '停止';
+                btn.className = 'bg-emerald-950 text-emerald-400 border border-emerald-800 py-1.5 rounded-lg font-bold text-center';
+            }
+        }
+
+        function toggleHUD(e) {
+            if (e) e.stopPropagation();
+            const isHidden = hudHeader.classList.contains('opacity-0');
+            if (isHidden) {
+                hudHeader.classList.remove('opacity-0');
+                hudFooter.classList.remove('opacity-0');
+            } else {
+                hudHeader.classList.add('opacity-0');
+                hudFooter.classList.add('opacity-0');
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
