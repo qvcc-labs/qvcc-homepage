@@ -82,13 +82,14 @@
 </head>
 <body class="flex flex-col items-center justify-center text-white relative">
 
-    <!-- 隐藏的音频播放器，接管云端 TTS 播放 -->
-    <audio id="cloud-audio-player" class="hidden"></audio>
+    <!-- 双路音频实体：A路为主播放器，B路为后台预加载播放器，交替工作实现零延迟切页 -->
+    <audio id="audio-player-primary" class="hidden" preload="auto" playsinline></audio>
+    <audio id="audio-player-secondary" class="hidden" preload="auto" playsinline></audio>
 
     <!-- 动态彩光背景环境 -->
     <div id="ambient-glow" class="glow-overlay absolute w-72 h-72 rounded-full bg-neonYellow/30 z-0 pointer-events-none"></div>
 
-    <!-- 手机端强制声音激活与底层解锁蒙层 [用A] -->
+    <!-- 手机端强制声音激活与底层解锁蒙层 -->
     <div id="audio-unlocker-overlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/98 px-6 text-center">
         <div class="w-full max-w-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col items-center">
             <span class="text-4xl mb-3 animate-bounce">🔊</span>
@@ -113,7 +114,7 @@
             <div class="font-mono" id="hud-counter">1 / 9</div>
         </header>
 
-        <!-- 卡片黄金显示区 [推D] -->
+        <!-- 卡片黄金显示区 -->
         <div class="card-container w-full flex items-center justify-center my-auto" style="height: 460px;">
             <div id="card-element" class="card-transition card-active w-full bg-zinc-950/60 border border-zinc-900 rounded-2xl p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden" style="height: 100%;">
                 
@@ -172,7 +173,7 @@
         </footer>
     </main>
 
-    <!-- 底部抽屉式提词控制台与诊断中心 [用A] -->
+    <!-- 底部抽屉式提词控制台与诊断中心 -->
     <div id="recording-controller" class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/98 border-t border-x border-zinc-800 rounded-t-2xl flex flex-col shadow-2xl transition-all duration-300 w-full max-w-md translate-y-[calc(100%-36px)]">
         
         <button onclick="toggleController(event)" class="w-full h-9 flex items-center justify-between px-6 bg-zinc-900 rounded-t-2xl border-b border-zinc-800/80 active:bg-zinc-800 transition-colors">
@@ -189,7 +190,7 @@
             <div class="bg-zinc-900 border border-zinc-800 p-3 rounded-lg flex flex-col gap-1">
                 <div class="flex justify-between items-center text-[10px] text-neonYellow font-mono font-bold">
                     <span class="flex items-center gap-1">
-                        📢 实时云端微软配音（中英混合高品质）[用A]
+                        📢 实时云端微软配音（中英混合高品质）
                         <span id="speaking-wave" class="hidden">
                             <span class="wave-bar"></span>
                             <span class="wave-bar"></span>
@@ -205,14 +206,14 @@
             <!-- 可视化诊断台 -->
             <div class="bg-black border border-zinc-900 rounded-lg p-3 font-mono text-[10px] text-zinc-400">
                 <div class="text-neonGreen font-bold mb-1 border-b border-zinc-900 pb-1 flex justify-between">
-                    <span>📋 实时网络及播放诊断</span>
+                    <span>📋 实时网络及预加载诊断</span>
                 </div>
                 <div id="diag-log" class="max-h-24 overflow-y-auto space-y-0.5 scrollbar-thin">
                     <div>> 等待用户触发管道机制...</div>
                 </div>
             </div>
 
-            <!-- 音色选择下拉菜单 [推D] [训C] -->
+            <!-- 音色选择下拉菜单 -->
             <div class="flex flex-col gap-1.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
                 <span class="text-zinc-400 font-bold mb-1">🎙️ 选择微软云端音色：</span>
                 <select id="voice-selector" onchange="updateVoice(this.value, event)" class="w-full bg-zinc-800 text-white rounded-lg p-2 border border-zinc-700 focus:outline-none focus:border-neonYellow text-xs font-semibold">
@@ -224,7 +225,7 @@
                 </select>
             </div>
 
-            <!-- 实时语速控制（接管网络音频流）[推D] -->
+            <!-- 实时语速控制 -->
             <div class="flex flex-col gap-1.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
                 <div class="flex justify-between items-center">
                     <span class="text-zinc-400 font-bold">🎙️ 实时口播语速（速率调节）：</span>
@@ -236,8 +237,8 @@
             <!-- 控制面板操作 -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="flex flex-col gap-1 bg-zinc-900/60 p-2 rounded-lg border border-zinc-900">
-                    <span class="text-zinc-500 font-bold mb-1">自动巡航：</span>
-                    <button id="btn-autoplay" onclick="toggleAutoplay(event)" class="bg-red-950 text-red-400 border border-red-800 py-1 rounded font-bold text-center">开启自动切页</button>
+                    <span class="text-zinc-500 font-bold mb-1">自动巡航模式（完美同步）：</span>
+                    <button id="btn-autoplay" onclick="toggleAutoplay(event)" class="bg-red-950 text-red-400 border border-red-800 py-1 rounded font-bold text-center">开启自动口播切页</button>
                 </div>
                 <div class="flex flex-col gap-1 bg-zinc-900/60 p-2 rounded-lg border border-zinc-900">
                     <span class="text-zinc-500 font-bold mb-1">干净画布：</span>
@@ -257,7 +258,6 @@
     </div>
 
     <script>
-        // 核心卡片大数据 [用A]
         const CARD_DATA = [
             {
                 tag: "2026 TRENDS / 时代风向", 
@@ -277,7 +277,7 @@
                 tag: "01 / 工业级一姐", 
                 title: "LangGraph", 
                 hook: "只要涉及复杂状态，别犹豫，直接闭眼入！", 
-                desc: "用显式“图结构”彻底终结模糊链条。支持超精密人机协同（HITL），对状态、回滚有变态般掌控力，工业级生产绝对核心！",
+                desc: "用显式“图结构”彻底终现模糊链条。支持超精密人机协同（HITL），对状态、回滚有变态般掌控力，工业级生产绝对核心！",
                 prompter: "大厂落地首选是谁？无可争议的 LangGraph！显式图结构专治工作流失控，需要人机协同的工业项目直接选它！",
                 precision: "控制精度",
                 precisionVal: "99.9%",
@@ -361,7 +361,7 @@
                 tag: "07 / 2026 落地避坑指南", 
                 title: "大厂血泪：乱配链条", 
                 hook: "痛点：九成以上的 Agent，最后死于失控！", 
-                desc: "警告：绝对不要依赖无图约束 of 开放式链条（Chains），否则在生产环境里，用户的随机输入会让你的 Agent 陷入死循环地狱！",
+                desc: "警告：绝对不要依赖无图约束的开放式链条（Chains），否则在生产环境里，用户的随机输入会让你的 Agent 陷入死循环地狱！",
                 prompter: "大厂 2026 的避坑指南：千万别再乱配无约束的链条了！九成的 Agent 生产失控，就是因为没有强制图结构约束！",
                 precision: "非稳失控率",
                 precisionVal: "85.2%",
@@ -389,11 +389,17 @@
 
         let currentIndex = 0;
         let isTransitioning = false;
-        let autoplayInterval = null;
-        let isControllerExpanded = false;
+        let isAutoplayActive = false; // 由音频播放事件驱动自动切页
         let isAudioUnlocked = false; 
-        let playbackRate = 1.10; // 默认更激情一点的短视频口播语速 [推D]
-        let selectedVoice = 'zh-CN-YunxiNeural'; // 默认爆款男神“云希”
+        let playbackRate = 1.10; 
+        let selectedVoice = 'zh-CN-YunxiNeural'; 
+        let isControllerExpanded = false; // 声明缺少的控制台折叠状态变量
+
+        // 实体双路音频驱动器 [推D]
+        const playerPrimary = document.getElementById('audio-player-primary');
+        const playerSecondary = document.getElementById('audio-player-secondary');
+        let activePlayer = playerPrimary;
+        let preloadPlayer = playerSecondary;
 
         const mainClickArea = document.getElementById('main-click-area');
         const cardElement = document.getElementById('card-element');
@@ -404,7 +410,6 @@
         const cardDesc = document.getElementById('card-desc');
         const hudCounter = document.getElementById('hud-counter');
         const ambientGlow = document.getElementById('ambient-glow');
-        const player = document.getElementById('cloud-audio-player');
 
         const statPrecisionTitle = document.querySelector('div.grid > div:nth-child(1) > span:nth-child(1)');
         const statPrecisionVal = document.getElementById('stat-precision');
@@ -442,78 +447,90 @@
             renderCard(0);
             buildQuickJumpControls();
             
-            // 绑定在线播放器事件
-            player.onplay = () => {
+            // 绑定主、副播放器事件，接管自动流式切换 [推D]
+            setupPlayerEvents(playerPrimary, 'A路');
+            setupPlayerEvents(playerSecondary, 'B路');
+        }
+
+        // 监听并绑定播放控制事件，彻底终结 setInterval [推D]
+        function setupPlayerEvents(playerInstance, name) {
+            playerInstance.onplay = () => {
                 speakingWave.classList.remove('hidden');
+                diagLog(`${name} 开始口播...`, 'ok');
             };
-            player.onended = () => {
+            playerInstance.onpause = () => {
                 speakingWave.classList.add('hidden');
-                diagLog('音频轨道正常播放完毕', 'ok');
             };
-            player.onerror = () => {
+            // 核心功能：当且仅当话音说完触发 `ended` 事件时，才能切页！ [用A] [推D]
+            playerInstance.onended = () => {
                 speakingWave.classList.add('hidden');
-                diagLog('❌ 云端接口网络阻塞或解析错误', 'err');
+                diagLog(`${name} 口播完毕。`);
+                
+                if (isAutoplayActive) {
+                    diagLog(`触发自动对齐，正在翻转至下一卡片...`, 'ok');
+                    nextPage();
+                }
+            };
+            playerInstance.onerror = () => {
+                speakingWave.classList.add('hidden');
+                diagLog(`❌ ${name} 接口资源加载阻塞`, 'err');
+                
+                // 如果在自动播放下接口卡死，执行安全降级，4秒后强制换页
+                if (isAutoplayActive) {
+                    diagLog('触发防死锁降级策略，4秒后强制跳转...', 'warn');
+                    setTimeout(() => {
+                        if (isAutoplayActive) nextPage();
+                    }, 4000);
+                }
             };
         }
 
-        // ========== 云端微缩接口接入 [用A] ==========
-        function speakCloud(text) {
+        // 核心：基于双向管道的云端获取与预加载机制 [推D]
+        function getApiUrl(text) {
+            return `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text)}&v=${selectedVoice}`;
+        }
+
+        function playAndPreload(currentIndexText, nextIndexText) {
             if (!isAudioUnlocked) return;
             
-            player.pause();
+            // 1. 终止所有现有的播放
+            activePlayer.pause();
 
-            const url = `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text)}&v=${selectedVoice}`;
+            // 2. 如果主路播放器尚未预加载好当前音频，则立即拉取
+            if (!activePlayer.src || activePlayer.src === "") {
+                activePlayer.src = getApiUrl(currentIndexText);
+            }
             
-            diagLog(`🚀 正在使用 ${selectedVoice} 语音包拉取音频流...`);
-            player.src = url;
-            player.playbackRate = playbackRate; // 应用语速 [用A]
+            activePlayer.playbackRate = playbackRate;
             
-            const playPromise = player.play();
+            // 3. 播放当前音频
+            const playPromise = activePlayer.play();
             if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    diagLog(`▶️ 成功触发云端口播：${text.substring(0, 10)}...`, 'ok');
-                }).catch(error => {
-                    diagLog(`⚠️ 浏览器拦截首播: ${error.message}`, 'warn');
+                playPromise.catch(error => {
+                    diagLog(`播放受限: ${error.message}`, 'warn');
                 });
+            }
+
+            // 4. 在当前音频播放的同时，副播放器立刻在后台拉取并预加载下一页的音频流 [用A] [推D]
+            if (nextIndexText) {
+                const preloadUrl = getApiUrl(nextIndexText);
+                preloadPlayer.src = preloadUrl;
+                preloadPlayer.load(); // 强制静默加载缓存
+                diagLog(`后台已开始预拉取下一张卡片的配音流...`, 'warn');
             }
         }
 
         function testUnlock() {
             isAudioUnlocked = true;
             unlockerOverlay.classList.add('hidden'); 
-            diagLog('音频管道机制已解锁，加载首张云端音效。', 'ok');
-            speakCloud(CARD_DATA[currentIndex].prompter);
-        }
-
-        // ========== 实时音色切换控制 [推D] ==========
-        function updateVoice(val, e) {
-            if (e) e.stopPropagation();
-            selectedVoice = val;
-            diagLog(`音色已动态切换为: ${selectedVoice}`, 'warn');
+            diagLog('语音及网络预加载控制机制成功解锁。', 'ok');
             
-            // 切换音色时立即重播当前卡片，提供直观反馈
-            if (isAudioUnlocked) {
-                speakCloud(CARD_DATA[currentIndex].prompter);
-            }
+            const currentText = CARD_DATA[0].prompter;
+            const nextText = CARD_DATA[1].prompter;
+            playAndPreload(currentText, nextText);
         }
 
-        // ========== 实时语速控制 [推D] ==========
-        function updateSpeechRate(val, e) {
-            if (e) e.stopPropagation();
-            playbackRate = parseFloat(val);
-            document.getElementById('rate-value').textContent = playbackRate.toFixed(2) + 'x';
-            
-            player.playbackRate = playbackRate;
-            diagLog(`云端拉取速率同步更新为: ${playbackRate.toFixed(2)}x`, 'warn');
-        }
-
-        function stopAll(e) {
-            if (e) e.stopPropagation();
-            player.pause();
-            speakingWave.classList.add('hidden');
-            diagLog('⏹ 已强行终止云端音频播放', 'warn');
-        }
-
+        // 切换卡片时的双路交替逻辑 [推D]
         function renderCard(index) {
             const data = CARD_DATA[index];
             cardTag.textContent = data.tag;
@@ -532,6 +549,7 @@
             teleprompterText.textContent = data.prompter;
             teleprompterNum.textContent = `${index + 1} / ${CARD_DATA.length}`;
 
+            // 动态切换荧光氛围
             let activeColorClass = 'text-neonYellow bg-neonYellow/10 border-neonYellow/20';
             let activeGlowColor = 'rgba(255, 255, 0, 0.15)';
             let activePingClass = 'bg-neonYellow';
@@ -585,10 +603,57 @@
             });
 
             if (isAudioUnlocked) {
-                speakCloud(data.prompter);
+                // 指标获取：当前页文本及预期的下一页文本
+                const currentText = data.prompter;
+                const nextIndex = (index + 1) % CARD_DATA.length;
+                const nextText = CARD_DATA[nextIndex].prompter;
+
+                // 物理交替：将预加载播放器升级为主播放器，主播放器降级为预加载播放器
+                const temp = activePlayer;
+                activePlayer = preloadPlayer;
+                preloadPlayer = temp;
+
+                playAndPreload(currentText, nextText);
             }
         }
 
+        // 音色动态切换
+        function updateVoice(val, e) {
+            if (e) e.stopPropagation();
+            selectedVoice = val;
+            diagLog(`音色切换为: ${selectedVoice}，正在清空缓冲预载区...`, 'warn');
+            
+            // 重置双向播放器管道
+            playerPrimary.src = "";
+            playerSecondary.src = "";
+            
+            if (isAudioUnlocked) {
+                const currentText = CARD_DATA[currentIndex].prompter;
+                const nextIndex = (currentIndex + 1) % CARD_DATA.length;
+                const nextText = CARD_DATA[nextIndex].prompter;
+                playAndPreload(currentText, nextText);
+            }
+        }
+
+        // 语速实时微调
+        function updateSpeechRate(val, e) {
+            if (e) e.stopPropagation();
+            playbackRate = parseFloat(val);
+            document.getElementById('rate-value').textContent = playbackRate.toFixed(2) + 'x';
+            
+            activePlayer.playbackRate = playbackRate;
+            diagLog(`口播速率同步调整为: ${playbackRate.toFixed(2)}x`, 'warn');
+        }
+
+        function stopAll(e) {
+            if (e) e.stopPropagation();
+            playerPrimary.pause();
+            playerSecondary.pause();
+            speakingWave.classList.add('hidden');
+            diagLog('⏹ 已中止所有音频轨道', 'warn');
+        }
+
+        // 140ms 物理闪切
         function switchPage(nextIndex) {
             if (isTransitioning) return;
             isTransitioning = true;
@@ -657,18 +722,27 @@
             });
         }
 
+        // 核心切换：将原有的定时器自动播放更改为“音频驱动自动播放”
         function toggleAutoplay(e) {
             if (e) e.stopPropagation();
             const btn = document.getElementById('btn-autoplay');
-            if (autoplayInterval) {
-                clearInterval(autoplayInterval);
-                autoplayInterval = null;
-                btn.textContent = '开启自动切页';
-                btn.className = 'bg-red-950 text-red-400 border border-red-800 py-1 rounded font-bold text-center';
-            } else {
-                autoplayInterval = setInterval(() => { nextPage(); }, 5200); 
-                btn.textContent = '停止自动切页';
+            
+            isAutoplayActive = !isAutoplayActive;
+            
+            if (isAutoplayActive) {
+                btn.textContent = '停止自动对齐口播';
                 btn.className = 'bg-emerald-950 text-emerald-400 border border-emerald-800 py-1 rounded font-bold text-center';
+                diagLog('已启动「音频事件驱动」全自动踩点换页模式！', 'ok');
+                
+                // 如果当前未在播放，主动启动发声
+                if (activePlayer.paused && isAudioUnlocked) {
+                    speakCloud(CARD_DATA[currentIndex].prompter);
+                }
+            } else {
+                btn.textContent = '开启自动口播切页';
+                btn.className = 'bg-red-950 text-red-400 border border-red-800 py-1 rounded font-bold text-center';
+                diagLog('已切回手动点击换页模式。', 'warn');
+                stopAll();
             }
         }
 
