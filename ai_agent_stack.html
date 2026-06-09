@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Agents Stack 2026 - 爆款大字报</title>
+    <style>
+        /* 基础样式复位 */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --neon-green: #00ff66;
+            --neon-yellow: #ffff00;
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff007f;
+            --bg-black: #000000;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-black);
+            font-family: 'Impact', 'Arial Black', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 声音解锁全屏蒙层 */
+        #audioUnlockOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .unlock-btn {
+            background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+            color: #000;
+            border: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .unlock-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
+        }
+
+        .unlock-tips {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.6;
+            max-width: 280px;
+            font-family: -apple-system, sans-serif;
+        }
+
+        /* 9:16 手机端竖屏安全区容器 */
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 450px; /* 标准手机录屏比例 */
+            margin: 0 auto;
+            background: #000000;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶部录屏 HUD */
+        .hud-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .hud-header.hidden {
+            opacity: 0;
+        }
+
+        .rec-indicator {
+            display: flex;
+            align-items: center;
+        }
+
+        .rec-dot {
+            width: 12px;
+            height: 12px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+
+        .hud-text {
+            font-size: 13px;
+            font-family: monospace;
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        /* 大字报卡片展示舞台 */
+        .stage {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 25px 230px 25px; /* 预留顶部 HUD 与底部控制台空间 */
+            cursor: pointer;
+        }
+
+        /* 动态背景荧光霓虹氛围灯（Glow Overlay） */
+        .glow-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            pointer-events: none;
+            transition: background 0.4s ease;
+            z-index: 1;
+        }
+
+        /* 卡片物理弹性切页效果 (140ms 物理闪切感) */
+        .card {
+            position: absolute;
+            width: calc(100% - 50px);
+            max-height: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) rotate(-6deg) translateY(60px);
+            transition: transform 140ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 140ms ease, visibility 140ms ease;
+            z-index: 5;
+        }
+
+        .card.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) rotate(0deg) translateY(0);
+        }
+
+        /* 卡片离场动画错位 */
+        .card.exit {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.15) rotate(6deg) translateY(-60px);
+        }
+
+        /* 大字报高亮霓虹大字 */
+        .keyword-highlight {
+            font-size: 44px;
+            line-height: 1.1;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1.5px;
+            word-wrap: break-word;
+            text-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            margin-bottom: 25px;
+        }
+
+        /* 释义文字 */
+        .sub-explain {
+            font-size: 19px;
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 0 5px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+            word-break: break-all;
+        }
+
+        /* 霓虹视觉风格主题定义 */
+        .theme-green .keyword-highlight { color: var(--neon-green); text-shadow: 0 0 25px rgba(0, 255, 102, 0.7); }
+        .theme-yellow .keyword-highlight { color: var(--neon-yellow); text-shadow: 0 0 25px rgba(255, 255, 0, 0.7); }
+        .theme-blue .keyword-highlight { color: var(--neon-blue); text-shadow: 0 0 25px rgba(0, 240, 255, 0.7); }
+        .theme-pink .keyword-highlight { color: var(--neon-pink); text-shadow: 0 0 25px rgba(255, 0, 127, 0.7); }
+
+        /* 底部控制台与提词器抽屉 */
+        .dashboard-drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(12, 12, 15, 0.96);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+            z-index: 200;
+            transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+            padding: 10px 20px 20px 20px;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .dashboard-drawer.collapsed {
+            transform: translateY(calc(100% - 40px));
+        }
+
+        /* 抽屉把手 */
+        .drawer-handle {
+            width: 100%;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .handle-bar {
+            width: 45px;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+
+        .drawer-handle:hover .handle-bar {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 参数网格行 */
+        .control-grid {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 11px;
+            color: #777;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            background: #18181c;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--neon-blue);
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            background: #222;
+            padding: 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--neon-blue);
+        }
+
+        /* 音波可视化组件 */
+        .audio-visualizer {
+            height: 30px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            margin: 12px 0;
+            opacity: 0; /* 默认隐藏，播放时动态显示 */
+            transition: opacity 0.3s ease;
+        }
+
+        .audio-visualizer.active {
+            opacity: 1;
+        }
+
+        .bar {
+            width: 4px;
+            height: 4px;
+            background-color: var(--neon-pink);
+            border-radius: 2px;
+            transition: height 0.08s ease, background-color 0.3s ease;
+        }
+
+        /* 操作按钮组 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--neon-green);
+            color: #000000;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #00e059;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.5);
+        }
+        
+        .btn-secondary {
+            background-color: #222228;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2c2c35;
+        }
+
+        /* 快速跳转数字卡片矩阵 */
+        .matrix-container {
+            margin-top: 15px;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .nav-matrix {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .matrix-btn {
+            width: 28px;
+            height: 28px;
+            line-height: 26px;
+            background: #18181c;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            font-size: 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-family: monospace;
+            transition: all 0.2s ease;
+        }
+
+        .matrix-btn:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .matrix-btn.active {
+            background: var(--neon-blue);
+            color: #000000;
+            font-weight: bold;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        }
+
+        /* 隐藏底层播放器 */
+        .audio-driver {
+            display: none;
+        }
+
+        /* 提示信息框 */
+        .message-toast {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid var(--neon-pink);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 300;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2);
+            text-align: center;
+        }
+
+        .message-toast.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 首屏声音激活解锁蒙层 -->
+<div id="audioUnlockOverlay">
+    <button class="unlock-btn" onclick="unlockAudioAndStart()">🚀 激活并首播微软高拟真语音</button>
+    <div class="unlock-tips">点击上方按钮将立即解锁移动端/桌面浏览器“自动播放安全拦截限制”，无缝启动 AI Agents Stack 2026 前沿大字报有声极速巡航！</div>
+</div>
+
+<div class="video-container">
+    
+    <!-- 顶部 HUD 干净画布区 -->
+    <div class="hud-header" id="hudHeader">
+        <div class="rec-indicator">
+            <span class="rec-dot"></span>
+            <span class="hud-text">REC</span>
+        </div>
+        <div>
+            <span class="hud-text" id="hudProgress">01 / 08</span>
+        </div>
+    </div>
+
+    <!-- 核心大字报舞台 -->
+    <div class="stage" onclick="onStageClick()">
+        <div class="glow-overlay" id="glowBg"></div>
+        <div id="cardStage"></div>
+    </div>
+
+    <!-- 底部控制台抽屉 -->
+    <div class="dashboard-drawer" id="dashboardDrawer">
+        <!-- 抽屉顶部拉手 -->
+        <div class="drawer-handle" onclick="toggleDrawer()">
+            <div class="handle-bar"></div>
+        </div>
+        
+        <!-- 参数网格 -->
+        <div class="control-grid">
+            <div class="control-item" style="flex: 1.4;">
+                <label for="voiceSelect">TTS 微软超拟真配音</label>
+                <select id="voiceSelect" onchange="onVoiceChange()">
+                    <option value="zh-CN-YunxiNeural" selected>云希 (中英混/高亢/推荐)</option>
+                    <option value="zh-CN-XiaoxiaoNeural">晓晓 (中英混/温柔/女声)</option>
+                    <option value="zh-CN-YunjianNeural">云健 (中英混/沉稳/男声)</option>
+                    <option value="en-US-GuyNeural">Guy (纯英文/极客磁性)</option>
+                </select>
+            </div>
+            <div class="control-item" style="flex: 0.8;">
+                <label for="speedRange">语速倍率 (<span id="speedVal">1.2</span>x)</label>
+                <input type="range" id="speedRange" min="0.8" max="2.0" step="0.1" value="1.2" oninput="onSpeedChange(this.value)">
+            </div>
+        </div>
+
+        <!-- 实时跳动音波可视化组件 -->
+        <div class="audio-visualizer" id="visualizer">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+
+        <!-- 主系统操作区 -->
+        <div class="btn-group">
+            <button class="btn btn-primary" id="playBtn" onclick="togglePlayCruise()">暂停巡航</button>
+            <button class="btn btn-secondary" onclick="toggleHudButton()">隐/显 HUD</button>
+        </div>
+
+        <!-- 快速定位按钮矩阵 -->
+        <div class="matrix-container">
+            <div class="nav-matrix" id="buttonMatrix"></div>
+        </div>
+    </div>
+
+    <!-- 自定义通知弹窗 -->
+    <div class="message-toast" id="messageToast">点击舞台任意位置可一键隐显HUD</div>
+</div>
+
+<!-- 双路交替隐藏播放器系统 -->
+<audio id="audioTrackA" class="audio-driver" preload="auto"></audio>
+<audio id="audioTrackB" class="audio-driver" preload="auto"></audio>
+
+<script>
+    // 2026 AI Agents Stack 最新核心提词配置
+    const agentStackData = [
+        {
+            keyword: "AI AGENTS<br>STACK 2026",
+            text: "欢迎来到2026年前沿AI智能体技术栈大盘点！告别传统软件架构，Agent时代的核心生态正在被彻底重构！",
+            theme: "theme-green",
+            glow: "#00ff66"
+        },
+        {
+            keyword: "1. COGNITIVE<br>CORES",
+            text: "第一层：认知核心！大模型升级为全能推理引擎，拥有超长上下文与深度自我反思能力，从对话助手走向自主决策大脑！",
+            theme: "theme-yellow",
+            glow: "#ffff00"
+        },
+        {
+            keyword: "2. AGENTIC<br>MEMORY",
+            text: "第二层：智能体记忆体！向量数据库与图数据库实现极致融合。不仅能实现短期关联，还能跨越时空进行持久知识沉淀！",
+            theme: "theme-blue",
+            glow: "#00f0ff"
+        },
+        {
+            keyword: "3. PLANNING &<br>REASONING",
+            text: "第三层：规划与推理！思维树与思维图算法成为主流底座。Agent在执行复杂任务前，会自动拆解路径并进行多次自我校准！",
+            theme: "theme-pink",
+            glow: "#ff007f"
+        },
+        {
+            keyword: "4. DYNAMIC<br>TOOLS INTEGRATION",
+            text: "第四层：动态工具集成！Agent不再局限于硬编码的API，它们开始实时阅读开发文档，甚至在安全沙箱中自行编写和运行代码！",
+            theme: "theme-green",
+            glow: "#00ff66"
+        },
+        {
+            keyword: "5. MULTI-AGENT<br>ORCHESTRATION",
+            text: "第五层：多智能体协同！单兵作战时代结束。不同职能的Agent在总线调度下自动组队、分配任务，协作解决端到端业务！",
+            theme: "theme-yellow",
+            glow: "#ffff00"
+        },
+        {
+            keyword: "6. HUMAN-IN-<br>THE-LOOP",
+            text: "第六层：人机协同反馈！极度流畅的人机审批与对齐接口。确保在关键财务、决策节点由人类安全介入，兼顾极速与绝对安全！",
+            theme: "theme-blue",
+            glow: "#00f0ff"
+        },
+        {
+            keyword: "7. EVALUATION &<br>GUARDRAILS",
+            text: "第七层：评估与防护栏！全自动的实时幻觉审计、安全栅栏与合规监控。为智能体全面落地生产环境构建最硬核的安全护城河！",
+            theme: "theme-pink",
+            glow: "#ff007f"
+        }
+    ];
+
+    // 全局状态管理变量
+    let currentIndex = 0;
+    let isAutoplayActive = false; // 初始非自动巡航，等待解锁蒙层激活
+    let isControllerExpanded = true; 
+    let isHudVisible = true;
+    let isAudioUnlocked = false; // 音频解锁安全锁
+    let currentSpeed = 1.2;
+    let currentVoice = 'zh-CN-YunxiNeural';
+    let visualizerInterval = null;
+
+    // 双路播放器通道定义
+    const audioPlayerA = document.getElementById('audioTrackA');
+    const audioPlayerB = document.getElementById('audioTrackB');
+    let usePlayerA = true; // 默认交替主通道为 A
+
+    // 页面初始化渲染
+    function init() {
+        const cardStage = document.getElementById('cardStage');
+        const buttonMatrix = document.getElementById('buttonMatrix');
+        
+        cardStage.innerHTML = '';
+        buttonMatrix.innerHTML = '';
+
+        agentStackData.forEach((item, idx) => {
+            // 动态构建卡片 HTML
+            const card = document.createElement('div');
+            card.className = `card ${item.theme}`;
+            card.id = `card-${idx}`;
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="keyword-highlight">${item.keyword}</div>
+                    <div class="sub-explain">${item.text}</div>
+                </div>
+            `;
+            cardStage.appendChild(card);
+
+            // 构建导航矩阵数字按钮
+            const btn = document.createElement('button');
+            btn.className = 'matrix-btn';
+            btn.id = `matrix-btn-${idx}`;
+            btn.innerText = (idx + 1).toString().padStart(2, '0');
+            btn.onclick = (e) => {
+                e.stopPropagation(); // 拦截向舞台区冒泡
+                jumpToPage(idx);
+            };
+            buttonMatrix.appendChild(btn);
+        });
+
+        // 应用初始化状态
+        updateUIState();
+        
+        // 绑定隐藏双路音频播放器的 ended 事件以驱动 0ms 链式切页
+        audioPlayerA.onended = () => handleAudioEnded();
+        audioPlayerB.onended = () => handleAudioEnded();
+
+        // 绑定音频播放、暂停状态以驱动音波动画的显隐
+        [audioPlayerA, audioPlayerB].forEach(player => {
+            player.onplay = () => {
+                document.getElementById('visualizer').classList.add('active');
+                startVisualizerAnimation();
+            };
+            player.onpause = () => {
+                document.getElementById('visualizer').classList.remove('active');
+                stopVisualizerAnimation();
+            };
+        });
+    }
+
+    // 声音解锁及首播处理
+    function unlockAudioAndStart() {
+        // 设置音频安全解锁标识
+        isAudioUnlocked = true;
+        isAutoplayActive = true;
+        
+        // 隐藏声音激活蒙层
+        document.getElementById('audioUnlockOverlay').style.display = 'none';
+        
+        // 在该点击事件的上下文中立即播放第一张卡片的音频，完美绕过安全拦截限制
+        playCurrentPageAudio();
+        showToast("📢 微软拟真语音已成功激活，巡航开始！");
+    }
+
+    // 统一卡片、HUD和背景灯状态更新
+    function updateUIState() {
+        agentStackData.forEach((_, idx) => {
+            const card = document.getElementById(`card-${idx}`);
+            const btn = document.getElementById(`matrix-btn-${idx}`);
+            
+            if (idx === currentIndex) {
+                card.className = `card ${agentStackData[idx].theme} active`;
+                if(btn) btn.classList.add('active');
+            } else if (idx < currentIndex) {
+                card.className = `card ${agentStackData[idx].theme} exit`;
+                if(btn) btn.classList.remove('active');
+            } else {
+                card.className = `card ${agentStackData[idx].theme}`;
+                if(btn) btn.classList.remove('active');
+            }
+        });
+
+        // 刷新 HUD 进度
+        document.getElementById('hudProgress').innerText = 
+            `${(currentIndex + 1).toString().padStart(2, '0')} / ${agentStackData.length.toString().padStart(2, '0')}`;
+
+        // 同步变换荧光背景光晕
+        document.getElementById('glowBg').style.background = agentStackData[currentIndex].glow;
+    }
+
+    // 生成微软云端 TTS 接口的完整网关 URL
+    function getTTSUrl(text) {
+        return `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text)}&v=${currentVoice}`;
+    }
+
+    // 核心双路播放器调度及下一页音频预加载机制
+    function playCurrentPageAudio() {
+        if (!isAudioUnlocked || !isAutoplayActive) return;
+
+        const currentText = agentStackData[currentIndex].text;
+        const currentPlayer = usePlayerA ? audioPlayerA : audioPlayerB;
+        const nextPlayer = usePlayerA ? audioPlayerB : audioPlayerA;
+
+        // 加载当前卡片音频源并设定语速
+        currentPlayer.src = getTTSUrl(currentText);
+        currentPlayer.playbackRate = currentSpeed; // 确保滑块变量同步至激活播放器
+        
+        let playPromise = currentPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // 当前卡片成功开始播放时，在后台使用另一路备用播放器悄悄预加载下一页的音频
+                const nextIndex = currentIndex + 1;
+                if (nextIndex < agentStackData.length) {
+                    nextPlayer.src = getTTSUrl(agentStackData[nextIndex].text);
+                    nextPlayer.load(); // 预热音频，消除换页白屏/静音硬伤
+                }
+            }).catch(error => {
+                console.warn("音频自动播放被浏览器拦截，将等待用户再次触发:", error);
+            });
+        }
+    }
+
+    // A/B路播放器链式自然结束驱动极速换页
+    function handleAudioEnded() {
+        if (!isAutoplayActive) return;
+
+        if (currentIndex < agentStackData.length - 1) {
+            currentIndex++;
+            usePlayerA = !usePlayerA; // 交替切换物理主音频播放器
+            updateUIState();
+            playCurrentPageAudio();   // 链式执行下一张卡片
+        } else {
+            // 循环遍历或复位逻辑
+            isAutoplayActive = false;
+            const playBtn = document.getElementById('playBtn');
+            playBtn.innerText = "重新启动";
+            playBtn.className = "btn btn-primary";
+            currentIndex = 0;
+            usePlayerA = true;
+            updateUIState();
+            showToast("✨ 巡航已全部播放完毕！");
+        }
+    }
+
+    // 手动快速点击指定页面跳转
+    function jumpToPage(index) {
+        if (!isAudioUnlocked) {
+            showToast("⚠️ 请先点击上方大按钮激活设备声音！");
+            return;
+        }
+        currentIndex = index;
+        updateUIState();
+        if (isAutoplayActive) {
+            audioPlayerA.pause();
+            audioPlayerB.pause();
+            playCurrentPageAudio();
+        }
+    }
+
+    // 启动/暂停自动巡航切换
+    function togglePlayCruise() {
+        if (!isAudioUnlocked) {
+            showToast("⚠️ 请先点击上方大按钮激活设备声音！");
+            return;
+        }
+        const playBtn = document.getElementById('playBtn');
+        if (isAutoplayActive) {
+            isAutoplayActive = false;
+            audioPlayerA.pause();
+            audioPlayerB.pause();
+            playBtn.innerText = "恢复巡航";
+            playBtn.className = "btn btn-primary";
+        } else {
+            isAutoplayActive = true;
+            playBtn.innerText = "暂停巡航";
+            playBtn.className = "btn btn-secondary";
+            playCurrentPageAudio();
+        }
+    }
+
+    // 切换音色
+    function onVoiceChange() {
+        currentVoice = document.getElementById('voiceSelect').value;
+        if (isAutoplayActive) {
+            audioPlayerA.pause();
+            audioPlayerB.pause();
+            playCurrentPageAudio();
+        }
+    }
+
+    // 同步语速变化
+    function onSpeedChange(val) {
+        currentSpeed = parseFloat(val);
+        document.getElementById('speedVal').innerText = val;
+        // 实时同步给当前正处于激活/预加载状态的播放器
+        audioPlayerA.playbackRate = currentSpeed;
+        audioPlayerB.playbackRate = currentSpeed;
+    }
+
+    // 交互：折叠与展开控制台抽屉
+    function toggleDrawer() {
+        const drawer = document.getElementById('dashboardDrawer');
+        isControllerExpanded = !isControllerExpanded;
+        if (isControllerExpanded) {
+            drawer.classList.remove('collapsed');
+        } else {
+            drawer.classList.add('collapsed');
+        }
+    }
+
+    // 交互：一键隐藏/显示顶栏录屏指示器
+    function toggleHudButton() {
+        const hud = document.getElementById('hudHeader');
+        isHudVisible = !isHudVisible;
+        if (isHudVisible) {
+            hud.classList.remove('hidden');
+        } else {
+            hud.classList.add('hidden');
+        }
+    }
+
+    // 点击卡片舞台区域触发隐显 HUD
+    function onStageClick() {
+        toggleHudButton();
+    }
+
+    // 跳动音波图形渲染器
+    function startVisualizerAnimation() {
+        stopVisualizerAnimation();
+        const bars = document.querySelectorAll('.bar');
+        const colorPalette = [
+            'var(--neon-pink)', 
+            'var(--neon-blue)', 
+            'var(--neon-green)', 
+            'var(--neon-yellow)'
+        ];
+        
+        visualizerInterval = setInterval(() => {
+            bars.forEach((bar, idx) => {
+                // 动态高度变化
+                const height = Math.floor(Math.random() * 26) + 4;
+                bar.style.height = `${height}px`;
+                // 根据音律起伏变换色阶
+                bar.style.backgroundColor = colorPalette[(idx + Math.floor(height / 6)) % colorPalette.length];
+            });
+        }, 80);
+    }
+
+    // 停止音波图形渲染器
+    function stopVisualizerAnimation() {
+        if (visualizerInterval) {
+            clearInterval(visualizerInterval);
+        }
+        const bars = document.querySelectorAll('.bar');
+        bars.forEach(bar => {
+            bar.style.height = '4px';
+            bar.style.backgroundColor = 'var(--neon-pink)';
+        });
+    }
+
+    // 自定义气泡通知
+    function showToast(msg) {
+        const toast = document.getElementById('messageToast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3500);
+    }
+
+    // 挂载执行
+    window.onload = () => {
+        init();
+    };
+</script>
+
+</body>
+</html>
