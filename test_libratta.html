@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>免费手机TTS</title>
+</head>
+<body>
+    <textarea id="textInput" rows="4" cols="40" placeholder="输入文字..."></textarea><br>
+    <button onclick="playAudio()">播放语音</button>
+    <audio id="audioPlayer" controls style="width: 100%; margin-top: 20px;"></audio>
+
+    <script>
+        async function playAudio() {
+            const text = document.getElementById('textInput').value;
+            if (!text) return;
+            
+            // 选择一个好听的中文女声 (支持很多语言)
+            const voice = "zh-CN-XiaoxiaoNeural"; 
+            // 构建API请求URL
+            const url = `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text)}&v=${voice}`;
+            
+            const player = document.getElementById('audioPlayer');
+            player.src = url;
+            player.play();
+        }
+    </script>
+</body>
+</html>
