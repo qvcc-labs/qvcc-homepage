@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TTS 诊断工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #39FF14;
+            font-size: 24px;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #39FF14;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .section {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            color: #FFFF00;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-box {
+            font-family: monospace;
+            font-size: 13px;
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #ccc;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-ok { color: #39FF14; }
+        .status-err { color: #FF5F1F; }
+        .status-warn { color: #FFFF00; }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary {
+            background: #FFFF00;
+            color: #000;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+        }
+        .btn-red {
+            background: #FF5F1F;
+            color: #fff;
+        }
+        
+        .voice-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .voice-name { color: #39FF14; font-weight: bold; }
+        .voice-lang { color: #888; font-size: 11px; }
+        .voice-tag {
+            display: inline-block;
+            background: #39FF14;
+            color: #000;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            font-weight: bold;
+        }
+        .voice-tag-en {
+            background: #444;
+            color: #aaa;
+        }
+        
+        .tip-box {
+            background: #FF5F1F15;
+            border: 1px solid #FF5F1F;
+            color: #FF5F1F;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        .tip-box.green {
+            background: #39FF1415;
+            border-color: #39FF14;
+            color: #39FF14;
+        }
+        
+        #log {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🔊 TTS 语音诊断工具</h1>
+<div class="subtitle">专为华为/海外版设备检测 Web Speech 状态</div>
+
+<div class="section">
+    <div class="section-title">📊 基础检测</div>
+    <div class="status-box" id="basic-info">正在检测...</div>
+</div>
+
+<div class="section">
+    <div class="section-title">🎙️ 语音列表 (<span id="voice-count">0</span>)</div>
+    <div id="voice-list" style="max-height: 400px; overflow-y: auto;">
+        <div style="color:#666; font-size:13px;">加载中...</div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-title">🧪 功能测试</div>
+    <button class="btn-primary" onclick="testUnlock()">1️⃣ 点击解锁音频并测试播放</button>
+    <button class="btn-secondary" onclick="testSpeak('声音通道已激活，测试成功')">2️⃣ 直接播放测试句</button>
+    <button class="btn-secondary" onclick="testSpeak('你好，这是中文语音测试')">3️⃣ 播放中文长句</button>
+    <button class="btn-red" onclick="stopAll()">⏹ 停止播放</button>
+    <div id="log"></div>
+</div>
+
+<div class="section">
+    <div class="section-title">💡 诊断结论</div>
+    <div id="conclusion">等待检测...</div>
+</div>
+
+<script>
+const logEl = document.getElementById('log');
+function log(msg) {
+    logEl.innerHTML += '> ' + msg + '<br>';
+    console.log(msg);
+}
+
+// ========== 基础检测 ==========
+function runBasicCheck() {
+    const info = [];
+    const synth = window.speechSynthesis;
+    
+    info.push('User-Agent: ' + navigator.userAgent.substring(0, 80));
+    info.push('speechSynthesis 存在: ' + ('speechSynthesis' in window));
+    
+    if ('speechSynthesis' in window) {
+        info.push('pending: ' + synth.pending);
+        info.push('speaking: ' + synth.speaking);
+        info.push('paused: ' + synth.paused);
+    }
+    
+    info.push('AudioContext 支持: ' + ('AudioContext' in window || 'webkitAudioContext' in window));
+    info.push('页面协议: ' + window.location.protocol);
+    
+    document.getElementById('basic-info').textContent = info.join('\n');
+}
+
+// ========== 加载语音列表 ==========
+function loadVoices() {
+    const voices = window.speechSynthesis.getVoices();
+    const listEl = document.getElementById('voice-list');
+    const countEl = document.getElementById('voice-count');
+    
+    countEl.textContent = voices.length;
+    listEl.innerHTML = '';
+    
+    if (voices.length === 0) {
+        listEl.innerHTML = '<div class="tip-box">⚠️ 语音列表为空！这是华为海外版最常见的问题：系统没有安装中文语音包，或 Chrome 无法访问系统 TTS。</div>';
+        updateConclusion('empty');
+        return;
+    }
+    
+    let zhCount = 0;
+    
+    voices.forEach((v, i) => {
+        const isZh = v.lang.includes('zh') || v.lang.includes('cmn') || v.lang.includes('yue');
+        if (isZh) zhCount++;
+        
+        const div = document.createElement('div');
+        div.className = 'voice-item';
+        div.innerHTML = `
+            <div>
+                <span class="voice-name">${v.name}</span>
+                <span class="voice-lang">${v.lang}</span>
+                ${isZh ? '<span class="voice-tag">中文</span>' : '<span class="voice-tag voice-tag-en">其他</span>'}
+            </div>
+            <div style="font-size:11px; color:#666; margin-top:4px;">
+                默认: ${v.default ? '是' : '否'} | 本地: ${v.localService ? '是' : '否'}
+            </div>
+        `;
+        div.onclick = () => testSpeak('测试语音 ' + (i+1), v);
+        listEl.appendChild(div);
+    });
+    
+    updateConclusion(zhCount > 0 ? 'ok' : 'no-zh', zhCount, voices.length);
+}
+
+function updateConclusion(status, zhCount, total) {
+    const el = document.getElementById('conclusion');
+    if (status === 'empty') {
+        el.innerHTML = `
+            <div class="tip-box">
+                ❌ <b>严重：系统语音引擎缺失</b><br><br>
+                你的设备（华为 Pura 70 海外版）没有可用的 TTS 语音数据。<br><br>
+                <b>解决方案：</b><br>
+                1. 去系统设置 → 应用 → 找到「Google 文字转语音引擎」或「语音服务」→ 启用<br>
+                2. 或安装第三方 TTS：如「讯飞语记」「Google TTS」<<br>
+                3. 或换 Kiwi Browser（自带语音引擎）
+            </div>
+        `;
+    } else if (status === 'no-zh') {
+        el.innerHTML = `
+            <div class="tip-box">
+                ⚠️ <b>有语音引擎，但没有中文语音</b><br><br>
+                检测到 ${total} 个语音，但<b>0 个中文</b>。这是华为海外版的典型问题。<br><br>
+                <b>解决方案：</b><br>
+                1. 设置 → 系统和更新 → 语言和输入法 → 文字转语音(TTS) → 下载中文语音<br>
+                2. 或安装 Google TTS 后，在 Play 商店下载中文语音包<br>
+                3. 临时方案：用英文语音引擎播放中文（会听到怪腔怪调，但能出声）
+            </div>
+        `;
+    } else {
+        el.innerHTML = `
+            <div class="tip-box green">
+                ✅ <b>语音引擎正常</b><br><br>
+                检测到 ${zhCount} 个中文语音，${total} 个总语音。<br>
+                如果点击测试仍无声，请检查：<br>
+                1. 手机是否处于静音/勿扰模式<br>
+                2. 媒体音量是否打开（不是铃声音量）<<br>
+                3. 是否在微信内置浏览器中打开（请用 Chrome 直接打开）
+            </div>
+        `;
+    }
+}
+
+// ========== 音频解锁（关键） ==========
+let audioCtx = null;
+function unlockAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    // 播放无声 buffer，强制占用音频通道
+    const buffer = audioCtx.createBuffer(1, 1, 22050);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+    log('AudioContext 已解锁: ' + audioCtx.state);
+}
+
+// ========== 测试播放 ==========
+function testUnlock() {
+    unlockAudio();
+    window.speechSynthesis.cancel();
+    
+    // 先播放一个极短的无声/低声唤醒包
+    const wake = new SpeechSynthesisUtterance('。');
+    wake.volume = 0.1;
+    wake.rate = 2;
+    
+    const trigger = new SpeechSynthesisUtterance('声音通道已激活，测试成功');
+    trigger.lang = 'zh-CN';
+    trigger.rate = 1.1;
+    trigger.volume = 1;
+    trigger.pitch = 1;
+    
+    // 绑定最佳语音
+    const voices = window.speechSynthesis.getVoices();
+    const zhVoice = voices.find(v => v.lang.includes('zh')) || voices[0];
+    if (zhVoice) {
+        wake.voice = zhVoice;
+        trigger.voice = zhVoice;
+        log('使用语音: ' + zhVoice.name);
+    }
+    
+    wake.onend = () => {
+        setTimeout(() => window.speechSynthesis.speak(trigger), 100);
+    };
+    wake.onerror = () => {
+        window.speechSynthesis.speak(trigger);
+    };
+    
+    trigger.onstart = () => log('▶️ 开始播放...');
+    trigger.onend = () => log('✅ 播放结束');
+    trigger.onerror = (e) => log('❌ 播放错误: ' + e.error);
+    
+    window.speechSynthesis.speak(wake);
+}
+
+function testSpeak(text, specificVoice) {
+    unlockAudio();
+    window.speechSynthesis.cancel();
+    
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 1.1;
+    u.volume = 1;
+    u.pitch = 1;
+    
+    if (specificVoice) {
+        u.voice = specificVoice;
+    } else {
+        const voices = window.speechSynthesis.getVoices();
+        const zh = voices.find(v => v.lang.includes('zh'));
+        if (zh) u.voice = zh;
+    }
+    
+    u.onstart = () => log('▶️ 播放: ' + text.substring(0, 15) + '...');
+    u.onend = () => log('✅ 结束');
+    u.onerror = (e) => log('❌ 错误: ' + e.error);
+    
+    window.speechSynthesis.speak(u);
+}
+
+function stopAll() {
+    window.speechSynthesis.cancel();
+    log('⏹ 已停止');
+}
+
+// ========== 初始化 ==========
+window.onload = function() {
+    runBasicCheck();
+    
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        // 某些设备需要主动触发
+        setTimeout(() => {
+            window.speechSynthesis.getVoices();
+            loadVoices();
+        }, 300);
+        setTimeout(loadVoices, 1000); // 二次保险
+    } else {
+        document.getElementById('voice-list').innerHTML = 
+            '<div class="tip-box">❌ 当前浏览器不支持 Web Speech API。请使用 Chrome、Edge 或 Safari。</div>';
+        updateConclusion('empty');
+    }
+};
+</script>
+
+</body>
+</html>
