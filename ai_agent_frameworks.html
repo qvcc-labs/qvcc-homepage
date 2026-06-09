@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>2026 顶级 Agent 框架大盘点 - 录屏大字报 | 双引擎语音版</title>
+    <title>2026 顶级 Agent 框架大盘点 - 录屏大字报</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -13,7 +13,8 @@
                         neonGreen: '#39FF14',
                         neonYellow: '#FFFF00',
                         neonOrange: '#FF5F1F',
-                        cyberBlack: '#0A0A0F',
+                        neonBlue: '#00F0FF',
+                        neonPink: '#FF007F',
                     },
                 }
             }
@@ -31,282 +32,487 @@
             -webkit-user-select: none; 
             overscroll-behavior: none; 
         }
-        ::-webkit-scrollbar { display: none; }
-        
-        .card-container { perspective: 1200px; }
+        ::-webkit-scrollbar { 
+            display: none; 
+        }
+        .card-container { 
+            perspective: 1000px; 
+        }
         .card-transition { 
-            transition: transform 140ms cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 120ms cubic-bezier(0.2, 0.9, 0.4, 1.1); 
+            transition: transform 140ms cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 140ms ease-out; 
         }
         .card-exit { 
-            transform: translate3d(-30px, -15px, -40px) rotateY(-4deg) scale(0.94); 
+            transform: translate(-40px, -20px) rotate(-2deg) scale(0.92); 
             opacity: 0; 
             pointer-events: none; 
         }
         .card-enter-prep { 
-            transform: translate3d(40px, 25px, -30px) rotateY(5deg) scale(0.96); 
+            transform: translate(50px, 30px) rotate(3deg) scale(0.95); 
             opacity: 0; 
             pointer-events: none; 
         }
         .card-active { 
-            transform: translate3d(0, 0, 0) rotateY(0deg) scale(1); 
+            transform: translate(0, 0) rotate(0deg) scale(1); 
             opacity: 1; 
             pointer-events: auto; 
         }
-
+        
         .wave-bar { 
             display: inline-block; 
             width: 3px; 
-            height: 12px; 
+            height: 10px; 
             background-color: #FFFF00; 
             margin: 0 1px; 
-            border-radius: 2px;
-            animation: sonic 0.55s infinite alternate ease-in-out; 
+            animation: bounce 0.6s infinite alternate; 
         }
-        .wave-bar:nth-child(2) { animation-delay: 0.1s; height: 14px; }
-        .wave-bar:nth-child(3) { animation-delay: 0.2s; height: 10px; }
-        .wave-bar:nth-child(4) { animation-delay: 0.3s; height: 16px; }
-        .wave-bar:nth-child(5) { animation-delay: 0.4s; height: 8px; }
-        @keyframes sonic { 
-            0% { height: 6px; opacity: 0.5; } 
-            100% { height: 20px; opacity: 1; background-color: #FF5F1F; } 
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        @keyframes bounce { 
+            from { height: 4px; } 
+            to { height: 16px; } 
         }
-
-        .controller-drawer {
-            transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        
+        .glow-overlay {
+            filter: blur(80px);
+            opacity: 0.15;
+            transition: background 300ms ease;
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center text-white relative overflow-hidden">
+<body class="flex flex-col items-center justify-center text-white relative">
 
-    <div class="absolute inset-0 bg-cyberBlack z-0"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(57,255,20,0.06)_0%,_#000_90%)] z-0"></div>
+    <!-- 隐藏的音频播放器，接管云端 TTS 播放 -->
+    <audio id="cloud-audio-player" class="hidden"></audio>
 
-    <main id="main-click-area" class="w-full h-full max-w-md flex flex-col justify-between px-5 pt-10 pb-20 z-10 relative cursor-pointer">
-        <header id="hud-header" class="w-full flex justify-between items-center text-[11px] text-zinc-500 font-mono transition-all duration-300">
-            <div class="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse ring-2 ring-red-500/30"></span>
-                <span class="tracking-widest font-bold">REC · 竖屏旗舰录制</span>
+    <!-- 动态彩光背景环境 -->
+    <div id="ambient-glow" class="glow-overlay absolute w-72 h-72 rounded-full bg-neonYellow/30 z-0 pointer-events-none"></div>
+
+    <!-- 手机端强制声音激活与底层解锁蒙层 [用A] -->
+    <div id="audio-unlocker-overlay" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/98 px-6 text-center">
+        <div class="w-full max-w-xs bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col items-center">
+            <span class="text-4xl mb-3 animate-bounce">🔊</span>
+            <h2 class="text-sm font-black text-white tracking-wide">2026 顶级云端声音激活</h2>
+            <p class="text-zinc-400 text-[11px] mt-2 mb-5 leading-relaxed">
+                正在切换至微软云端高拟真神经网络语音轨。请点击下方按钮启动音频管道并加载首张大字报。
+            </p>
+            <button id="force-active-btn" onclick="testUnlock()" class="w-full bg-neonYellow text-black font-black py-3 rounded-xl text-xs tracking-widest active:scale-95 transition-transform shadow-lg shadow-yellow-500/10">
+                🚀 激活并首播微软高拟真语音
+            </button>
+            <p class="text-[10px] text-zinc-600 mt-3">请确保手机未处于静音状态</p>
+        </div>
+    </div>
+
+    <!-- 顶层录制主容器 -->
+    <main id="main-click-area" class="w-full h-full max-w-md flex flex-col justify-between px-6 pt-12 pb-32 z-10 relative cursor-pointer">
+        <header id="hud-header" class="w-full flex justify-between items-center text-xs text-zinc-600 transition-opacity duration-300">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                <span class="tracking-widest font-mono">REC 9:16 PORTRAIT</span>
             </div>
-            <div class="font-mono font-black bg-black/40 px-3 py-1 rounded-full backdrop-blur-sm" id="hud-counter">1 / 9</div>
+            <div class="font-mono" id="hud-counter">1 / 9</div>
         </header>
 
-        <div class="card-container w-full flex items-center justify-center my-2" style="height: 430px;">
-            <div id="card-element" class="card-transition card-active w-full bg-gradient-to-br from-zinc-950/95 to-black/90 border border-yellow-500/30 rounded-2xl p-6 flex flex-col justify-between shadow-2xl shadow-black/80 relative overflow-hidden backdrop-blur-sm" style="height: 100%;">
-                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,215,0,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,215,0,0.02)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
-                <div class="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-neonOrange/5 blur-3xl"></div>
-                <div>
-                    <span id="card-tag" class="text-neonYellow font-black tracking-[0.15em] text-[11px] uppercase bg-neonYellow/15 px-3 py-1.5 rounded-full inline-block border border-yellow-500/30">2026 风向标</span>
-                    <h1 id="card-title" class="text-3xl lg:text-4xl font-black text-white tracking-tight mt-5 leading-tight drop-shadow-md">Agent 选型</h1>
+        <!-- 卡片黄金显示区 [推D] -->
+        <div class="card-container w-full flex items-center justify-center my-auto" style="height: 460px;">
+            <div id="card-element" class="card-transition card-active w-full bg-zinc-950/60 border border-zinc-900 rounded-2xl p-5 flex flex-col justify-between shadow-2xl relative overflow-hidden" style="height: 100%;">
+                
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.005)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.005)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none"></div>
+
+                <div class="relative z-10 flex justify-between items-start">
+                    <span id="card-tag" class="text-neonYellow font-black tracking-widest text-[10px] uppercase bg-neonYellow/10 border border-neonYellow/20 px-2.5 py-1 rounded-md transition-colors">
+                        2026 TRENDS
+                    </span>
+                    <span id="card-badge" class="text-[9px] font-bold text-zinc-500 tracking-wider font-mono">
+                        STABLE V1.0
+                    </span>
                 </div>
-                <div id="card-hook-box" class="border-l-4 border-neonOrange bg-neonOrange/5 pl-4 py-2 my-2 rounded-r-md">
-                    <p id="card-hook" class="text-xl font-black text-yellow-100 leading-tight drop-shadow-sm">工业级框架榜首之战</p>
+
+                <div class="relative z-10 mt-3">
+                    <h1 id="card-title" class="text-3.5xl md:text-4xl font-black text-white tracking-tighter leading-none font-sans drop-shadow-[0_4px_12px_rgba(255,255,255,0.05)]">
+                        AI Agent 选型
+                    </h1>
                 </div>
-                <div><p id="card-desc" class="text-zinc-400 text-xs leading-relaxed font-medium tracking-wide">官方白皮书推荐 · 双引擎语音智能播报</p></div>
-                <div class="absolute bottom-3 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent"></div>
+
+                <div class="relative z-10 grid grid-cols-3 gap-2 py-1.5 my-2.5">
+                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-2 flex flex-col justify-center">
+                        <span class="text-[9px] text-zinc-500 font-bold tracking-wider">控制精度</span>
+                        <span id="stat-precision" class="text-neonYellow font-black text-sm mt-0.5 tracking-tight">87%</span>
+                    </div>
+                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-2 flex flex-col justify-center">
+                        <span class="text-[9px] text-zinc-500 font-bold tracking-wider">上手门槛</span>
+                        <span id="stat-difficulty" class="text-white font-black text-sm mt-0.5 tracking-tight">★☆☆☆☆</span>
+                    </div>
+                    <div class="bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-2 flex flex-col justify-center">
+                        <span class="text-[9px] text-zinc-500 font-bold tracking-wider">应用重心</span>
+                        <span id="stat-domain" class="text-neonGreen font-black text-[11px] truncate mt-0.5 tracking-tighter">企业 RAG</span>
+                    </div>
+                </div>
+
+                <div id="card-hook-box" class="border-l-[6px] border-neonOrange bg-neonOrange/10 pl-3.5 py-2.5 my-1.5 rounded-r-lg relative z-10 transition-colors">
+                    <p id="card-hook" class="text-[16px] md:text-[18px] font-black text-white leading-snug tracking-wide">
+                        别再瞎选了！官方发布终极指南
+                    </p>
+                </div>
+
+                <div class="relative z-10 mb-2">
+                    <p id="card-desc" class="text-zinc-400 text-xs md:text-sm leading-relaxed font-semibold">
+                        一文看清 最强 AI Agent 引擎！
+                    </p>
+                </div>
+
+                <div id="card-audit" class="absolute bottom-2 right-4 text-[9px] text-zinc-700 font-mono tracking-wider">
+                    [用A: JetBrains 2026 官方研报]
+                </div>
             </div>
         </div>
 
-        <footer id="hud-footer" class="w-full flex flex-col items-center gap-2 z-10 transition-all duration-300">
-            <p class="text-zinc-600 text-[10px] tracking-widest text-center font-mono animate-pulse-slow">⚡ 轻触屏幕 · 极速闪切 + 智能语音 ⚡</p>
+        <footer id="hud-footer" class="w-full flex flex-col items-center gap-3 z-10 transition-opacity duration-300">
+            <p id="click-tip" class="text-zinc-600 text-xs tracking-widest text-center animate-pulse">👇 点击屏幕任意位置「瞬切下一页」</p>
         </footer>
     </main>
 
-    <div id="recording-controller" class="controller-drawer fixed bottom-0 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/98 border-t border-x border-yellow-900/50 rounded-t-2xl shadow-2xl w-full max-w-md translate-y-[calc(100%-42px)] backdrop-blur-lg">
+    <!-- 底部抽屉式提词控制台与诊断中心 [用A] -->
+    <div id="recording-controller" class="fixed bottom-0 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/98 border-t border-x border-zinc-800 rounded-t-2xl flex flex-col shadow-2xl transition-all duration-300 w-full max-w-md translate-y-[calc(100%-36px)]">
         
-        <button onclick="toggleController(event)" class="w-full h-11 flex items-center justify-between px-6 bg-black/80 rounded-t-2xl border-b border-yellow-900/40 active:bg-zinc-900 transition-all group">
+        <button onclick="toggleController(event)" class="w-full h-9 flex items-center justify-between px-6 bg-zinc-900 rounded-t-2xl border-b border-zinc-800/80 active:bg-zinc-800 transition-colors">
             <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-neonYellow animate-pulse"></span>
-                <span class="text-[11px] font-black tracking-widest text-zinc-300 font-mono group-hover:text-yellow-300 transition">🎙️ 双引擎语音 · 中英混读</span>
+                <span id="controller-ping" class="w-1.5 h-1.5 rounded-full bg-neonYellow animate-ping"></span>
+                <span class="text-[11px] font-black tracking-widest text-zinc-300 font-mono">🔍 诊断台 & 提词器</span>
             </div>
-            <span id="controller-arrow" class="text-xs text-yellow-500 font-bold transition-transform duration-300">▲ 展开控制台</span>
+            <span id="controller-arrow" class="text-xs text-zinc-500 font-bold transition-transform duration-300">▲ 点击展开面板</span>
         </button>
 
-        <div class="p-5 flex flex-col gap-4 text-xs bg-black/90">
-            <div class="bg-zinc-900/80 border border-zinc-800 p-3 rounded-xl shadow-inner">
-                <div class="flex justify-between items-center text-[10px] text-neonYellow font-mono font-bold mb-2">
-                    <span class="flex items-center gap-2">
-                        📢 智能提词器
+        <div class="p-5 flex flex-col gap-4 text-xs">
+            
+            <!-- 实时提词器 -->
+            <div class="bg-zinc-900 border border-zinc-800 p-3 rounded-lg flex flex-col gap-1">
+                <div class="flex justify-between items-center text-[10px] text-neonYellow font-mono font-bold">
+                    <span class="flex items-center gap-1">
+                        📢 实时云端微软配音（中英混合高品质）[用A]
                         <span id="speaking-wave" class="hidden">
-                            <span class="wave-bar"></span>
                             <span class="wave-bar"></span>
                             <span class="wave-bar"></span>
                             <span class="wave-bar"></span>
                             <span class="wave-bar"></span>
                         </span>
                     </span>
-                    <span id="teleprompter-num" class="bg-black/50 px-2 py-0.5 rounded-full">1/9</span>
+                    <span id="teleprompter-num">1 / 9</span>
                 </div>
-                <p id="teleprompter-text" class="text-white text-sm font-semibold leading-relaxed tracking-wide">正在加载旗舰文案…</p>
-                <div class="h-[2px] w-full bg-gradient-to-r from-yellow-600/50 to-orange-500/30 mt-2 rounded-full"></div>
+                <p id="teleprompter-text" class="text-zinc-200 text-xs font-semibold leading-relaxed mt-1">正在加载提词...</p>
             </div>
 
-            <div class="flex flex-col gap-2 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
-                <span class="text-zinc-300 font-black text-[11px] flex items-center gap-1"><span class="text-yellow-400">🎛️</span> 语音引擎 (Web Speech 原生)</span>
-                <div class="grid grid-cols-2 gap-3">
-                    <button id="voice-male" onclick="setVoiceGender(event, 'male')" class="bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all active:scale-95">🎙️ 磁性男声</button>
-                    <button id="voice-female" onclick="setVoiceGender(event, 'female')" class="bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700 transition-all">🎤 甜美女生</button>
+            <!-- 可视化诊断台 -->
+            <div class="bg-black border border-zinc-900 rounded-lg p-3 font-mono text-[10px] text-zinc-400">
+                <div class="text-neonGreen font-bold mb-1 border-b border-zinc-900 pb-1 flex justify-between">
+                    <span>📋 实时网络及播放诊断</span>
                 </div>
-                <div class="text-[9px] text-center text-emerald-400/80 mt-1">✅ 浏览器原生支持 · 无需网络代理 · 中英自动识别</div>
+                <div id="diag-log" class="max-h-24 overflow-y-auto space-y-0.5 scrollbar-thin">
+                    <div>> 等待用户触发管道机制...</div>
+                </div>
             </div>
 
+            <!-- 音色选择下拉菜单 [推D] [训C] -->
+            <div class="flex flex-col gap-1.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                <span class="text-zinc-400 font-bold mb-1">🎙️ 选择微软云端音色：</span>
+                <select id="voice-selector" onchange="updateVoice(this.value, event)" class="w-full bg-zinc-800 text-white rounded-lg p-2 border border-zinc-700 focus:outline-none focus:border-neonYellow text-xs font-semibold">
+                    <option value="zh-CN-YunxiNeural" selected>云希 (zh-CN-YunxiNeural) - 故事男音 (短视频爆款声线)</option>
+                    <option value="zh-CN-XiaoxiaoNeural">晓晓 (zh-CN-XiaoxiaoNeural) - 温暖女声 (细腻温和)</option>
+                    <option value="zh-CN-YuntingNeural">云霆 (zh-CN-YuntingNeural) - 专业纪录片男声 (浑厚大气)</option>
+                    <option value="zh-CN-XiaoyiNeural">晓伊 (zh-CN-XiaoyiNeural) - 活泼少女女声 (轻松可爱)</option>
+                    <option value="zh-CN-YunyangNeural">云扬 (zh-CN-YunyangNeural) - 广播新闻男声 (端正稳重)</option>
+                </select>
+            </div>
+
+            <!-- 实时语速控制（接管网络音频流）[推D] -->
+            <div class="flex flex-col gap-1.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-900">
+                <div class="flex justify-between items-center">
+                    <span class="text-zinc-400 font-bold">🎙️ 实时口播语速（速率调节）：</span>
+                    <span id="rate-value" class="text-neonYellow font-mono font-bold">1.10x</span>
+                </div>
+                <input id="speech-rate-slider" type="range" min="0.5" max="2.0" step="0.05" value="1.10" oninput="updateSpeechRate(this.value, event)" class="w-full accent-neonYellow h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            <!-- 控制面板操作 -->
             <div class="grid grid-cols-2 gap-3">
-                <div class="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800">
-                    <span class="text-zinc-400 font-bold text-[10px] block mb-1.5">⚡ 自动巡航切页</span>
-                    <button id="btn-autoplay" onclick="toggleAutoplay(event)" class="w-full bg-red-950/80 text-red-400 border border-red-700 py-2 rounded-lg font-bold text-[11px] transition-all active:scale-95">开启巡航</button>
+                <div class="flex flex-col gap-1 bg-zinc-900/60 p-2 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-500 font-bold mb-1">自动巡航：</span>
+                    <button id="btn-autoplay" onclick="toggleAutoplay(event)" class="bg-red-950 text-red-400 border border-red-800 py-1 rounded font-bold text-center">开启自动切页</button>
                 </div>
-                <div class="bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800">
-                    <span class="text-zinc-400 font-bold text-[10px] block mb-1.5">🎬 清爽录制模式</span>
-                    <button onclick="toggleHUD(event)" class="w-full bg-zinc-800 text-zinc-200 py-2 rounded-lg font-bold text-[11px] transition-all active:scale-95">隐藏/显示 HUD</button>
+                <div class="flex flex-col gap-1 bg-zinc-900/60 p-2 rounded-lg border border-zinc-900">
+                    <span class="text-zinc-500 font-bold mb-1">干净画布：</span>
+                    <button onclick="toggleHUD(event)" class="bg-zinc-800 text-zinc-200 py-1 rounded font-bold text-center">隐藏/显示HUD</button>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-                <label class="text-zinc-400 font-black text-[10px] tracking-wider">⏩ 章节快切 (1-9)</label>
-                <div class="grid grid-cols-5 gap-2 mt-1" id="quick-jump-container"></div>
+            <div class="flex flex-col gap-1">
+                <label class="text-zinc-500 font-bold">手动快速测试：</label>
+                <div class="grid grid-cols-5 gap-1.5 mt-1" id="quick-jump-container"></div>
             </div>
+            
+            <button onclick="stopAll(event)" class="w-full py-2 bg-red-600 text-white rounded font-bold text-center active:scale-95 transition-all">
+                ⏹ 立刻静音 / 强行中断播放
+            </button>
         </div>
     </div>
 
     <script>
-        // 数据
+        // 核心卡片大数据 [用A]
         const CARD_DATA = [
-            { tag: "2026 趋势 / 榜首对决", title: "Agent 选型圣经", hook: "主流大厂架构图谱·最新风向", desc: "LangGraph、LlamaIndex、AutoGen、CrewAI 旗舰对比", prompter: "各位AI架构师，别再盲目选型了。2026年顶级Agent框架正式洗牌，LangGraph、LlamaIndex、AutoGen、CrewAI，今天带你理清最强工具链。" },
-            { tag: "01 · 工业级一姐", title: "LangGraph", hook: "复杂工作流 · 强如石墨烯", desc: "显式图结构 + 人机回环，超细粒度状态控制。", prompter: "LangGraph已经统治大厂生产环境，如果你的系统需要多步骤状态回溯，直接选它。支持HITL人机协同，完美适合企业级Agent。" },
-            { tag: "02 · RAG 底座之王", title: "LlamaIndex", hook: "私有知识库 · 检索即正义", desc: "结构化数据打通一切，本地PDF、数据库、混合检索极致精准。", prompter: "LlamaIndex是RAG赛道的绝对王者，从本地文档到向量数据库，它能以最高精度检索你的私有知识，不用犹豫。" },
-            { tag: "03 · 企业精密管道", title: "Haystack", hook: "稳定压倒一切", desc: "高度模块化Pipeline，数据路由与评估器极苛刻。", prompter: "企业级应用稳定性就是生命线，Haystack提供的管道架构拥有最严谨的可控性，保障你的AI应用永不脱轨。" },
-            { tag: "04 · 多智能体戏精", title: "AutoGen", hook: "角色辩论 · 协作闭环", desc: "微软出品，让多个AI互相争辩达成共识。", prompter: "想让多个智能体替你开会、辩论并产出最终决策？AutoGen就是你的硅基团队，复杂逻辑自行消解。" },
-            { tag: "05 · 特种兵KPI", title: "CrewAI", hook: "目标必达 · 极致执行", desc: "每个Agent拥有明确职级与KPI，强目标导向。", prompter: "背KPI的AI特种兵CrewAI，把真实职场搬进代码，每个Agent背负使命必达的任务，效率拉满。" },
-            { tag: "06 · 极速原型机", title: "LangChain", hook: "生态无敌 · 快速落地", desc: "集成海量组件，15分钟跑通Demo。", prompter: "LangChain依然是验证想法最快的框架，15分钟就能让创意飞起来，生态丰富到令人发指。" },
-            { tag: "07 · 2026 血泪避坑", title: "失控警报", hook: "九成Agent死于链条地狱", desc: "拒绝无约束开放式链条！生产环境必用图结构。", prompter: "大厂血的教训：任何无向链条最终都会导致Agent失控。想要部署到生产环境，强制结构比如LangGraph才是唯一解。" },
-            { tag: "08 · 闭眼选型总结", title: "终极决策表", hook: "一图看懂最终抉择", desc: "流程控制→LangGraph | RAG→LlamaIndex | 多智能体→AutoGen", prompter: "最后帮你总结：复杂流程LangGraph，文档RAG选LlamaIndex，多智能体AutoGen，快速玩票LangChain。收藏这个榜单，选型不再迷茫。" }
+            {
+                tag: "2026 TRENDS / 时代风向", 
+                title: "AI Agent 选型", 
+                hook: "全网最强盘点！大厂在用什么框架？", 
+                desc: "LangGraph、LlamaIndex、Haystack...别再看两年前的老教程了，JetBrains 2026 最新官方白皮书，带你避开所有坑！",
+                prompter: "还在乱选框架吗？官方发布了 2026 最强 AI Agent 框架盘点！十页干货直接把选型给你讲透！",
+                precision: "大厂采纳率",
+                precisionVal: "87%",
+                difficulty: "研究报告",
+                difficultyVal: "JetBrains",
+                domain: "年度核心",
+                domainVal: "图化控制",
+                color: "neonYellow"
+            },
+            {
+                tag: "01 / 工业级一姐", 
+                title: "LangGraph", 
+                hook: "只要涉及复杂状态，别犹豫，直接闭眼入！", 
+                desc: "用显式“图结构”彻底终结模糊链条。支持超精密人机协同（HITL），对状态、回滚有变态般掌控力，工业级生产绝对核心！",
+                prompter: "大厂落地首选是谁？无可争议的 LangGraph！显式图结构专治工作流失控，需要人机协同的工业项目直接选它！",
+                precision: "控制精度",
+                precisionVal: "99.9%",
+                difficulty: "上手门槛",
+                difficultyVal: "★★★★☆",
+                domain: "最适场景",
+                domainVal: "多状态工作流",
+                color: "neonGreen"
+            },
+            {
+                tag: "02 / RAG 大脑级底座", 
+                title: "LlamaIndex", 
+                hook: "重度私有知识库，它是绝对的检索之王！", 
+                desc: "数据结构化大师！将复杂的本地 PDF、数据库、向量和混合检索无缝打通。只要你的 AI 依赖外部私有资料，不用怀疑就是它！",
+                prompter: "做知识库和 RAG 怎么挑？LlamaIndex 依然是王牌！别用通用框架，用它才能把本地文档检索做到极致精度！",
+                precision: "数据吞吐率",
+                precisionVal: "98.2%",
+                difficulty: "上手门槛",
+                difficultyVal: "★★★☆☆",
+                domain: "最适场景",
+                domainVal: "企业智能检索",
+                color: "neonBlue"
+            },
+            {
+                tag: "03 / 企业级精密管道", 
+                title: "Haystack", 
+                hook: "追求极致稳定性，给生产环境上个保险！", 
+                desc: "采用高度模块化的 Pipeline（管道）架构。对数据路由、索引器和评估器有着极其严苛的流式控权，专为不容出错的企业定制。",
+                prompter: "企业项目不容许一丁点失误？选 Haystack 吧。极强的管道架构和模块化设计，给你的生产级 RAG 装上防爆阀！",
+                precision: "合规安全度",
+                precisionVal: "99.8%",
+                difficulty: "上手门槛",
+                difficultyVal: "★★★★☆",
+                domain: "最适场景",
+                domainVal: "生产级合规RAG",
+                color: "neonGreen"
+            },
+            {
+                tag: "04 / 角色扮演戏精", 
+                title: "AutoGen", 
+                hook: "智能体多向辩论，复杂逻辑在聊天中解决！", 
+                desc: "微软王牌！完美的角色驱动多智能体（Multi-Agent）框架。模拟真实人类团队，让几个 Agent 互相争辩、达成共识，自己搞定复杂任务！",
+                prompter: "一个人干完一个公司的活？微软的 AutoGen 来帮你。多智能体协作、互相辩论，自己就能在聊天中完成高难度逻辑闭环！",
+                precision: "多向演化度",
+                precisionVal: "95.5%",
+                difficulty: "上手门槛",
+                difficultyVal: "★★★★★",
+                domain: "最适场景",
+                domainVal: "复杂角色推演",
+                color: "neonPink"
+            },
+            {
+                tag: "05 / 目标突击特种兵", 
+                title: "CrewAI", 
+                hook: "背负 KPI 干活，高执行力目标驱使者！", 
+                desc: "把真实职场架构搬进 AI. 每个 Agent 都有明确岗位和 KPI，目标极其导向，适合需要强执行、快速推进的具体业务。",
+                prompter: "想要一队高效的 AI 特种兵？选 CrewAI！完全复刻真实职场，背着 KPI 去执行任务，分工极度明确，目标必达！",
+                precision: "目标达成率",
+                precisionVal: "96.7%",
+                difficulty: "上手门槛",
+                difficultyVal: "★★☆☆☆",
+                domain: "最适场景",
+                domainVal: "明确分工自动化",
+                color: "neonOrange"
+            },
+            {
+                tag: "06 / 快速概念验证", 
+                title: "LangChain", 
+                hook: "生态无敌！15分钟跑通你脑洞的神器！", 
+                desc: "虽然在复杂状态控制上饱受诟病，但集成了最丰富的工具和极客生态。15 分钟闭眼跑通 Demo，初创产品和黑客松不二之选。",
+                prompter: "想快速跑通 Demo 吹牛？那还得是 LangChain！虽然它被吐槽臃肿，但生态无人能敌，15分钟内让你的想法落地跑起来！",
+                precision: "组件成熟度",
+                precisionVal: "100.0%",
+                difficulty: "上手门槛",
+                difficultyVal: "★★☆☆☆",
+                domain: "最适场景",
+                domainVal: "极客PoC原型验证",
+                color: "neonBlue"
+            },
+            {
+                tag: "07 / 2026 落地避坑指南", 
+                title: "大厂血泪：乱配链条", 
+                hook: "痛点：九成以上的 Agent，最后死于失控！", 
+                desc: "警告：绝对不要依赖无图约束 of 开放式链条（Chains），否则在生产环境里，用户的随机输入会让你的 Agent 陷入死循环地狱！",
+                prompter: "大厂 2026 的避坑指南：千万别再乱配无约束的链条了！九成的 Agent 生产失控，就是因为没有强制图结构约束！",
+                precision: "非稳失控率",
+                precisionVal: "85.2%",
+                difficulty: "致命等级",
+                difficultyVal: "★★★★★",
+                domain: "避坑方案",
+                domainVal: "强约束图结构",
+                color: "neonPink"
+            },
+            {
+                tag: "08 / 局势终极总结", 
+                title: "一句话闭眼选", 
+                hook: "别纠结了！核心决策直接看这里：", 
+                desc: "流式控制与人机协作选 LangGraph；私有 RAG 选 LlamaIndex；角色争辩选 AutoGen；特种兵目标导向选 CrewAI；快速玩票选 LangChain！",
+                prompter: "最后总结：复杂工作流选 LangGraph！重文档选 LlamaIndex！多智能体用 AutoGen！收藏关注，下期见！",
+                precision: "决策转化率",
+                precisionVal: "99.1%",
+                difficulty: "实战指南",
+                difficultyVal: "闭眼入",
+                domain: "最终奥义",
+                domainVal: "顺势降维打击",
+                color: "neonYellow"
+            }
         ];
 
         let currentIndex = 0;
         let isTransitioning = false;
         let autoplayInterval = null;
         let isControllerExpanded = false;
-        let currentUtterance = null;
-        let preferredGender = 'male'; // 'male' or 'female'
-        let speechVoices = [];
+        let isAudioUnlocked = false; 
+        let playbackRate = 1.10; // 默认更激情一点的短视频口播语速 [推D]
+        let selectedVoice = 'zh-CN-YunxiNeural'; // 默认爆款男神“云希”
 
-        // DOM 元素
         const mainClickArea = document.getElementById('main-click-area');
         const cardElement = document.getElementById('card-element');
         const cardTag = document.getElementById('card-tag');
         const cardTitle = document.getElementById('card-title');
+        const cardHookBox = document.getElementById('card-hook-box');
         const cardHook = document.getElementById('card-hook');
         const cardDesc = document.getElementById('card-desc');
         const hudCounter = document.getElementById('hud-counter');
+        const ambientGlow = document.getElementById('ambient-glow');
+        const player = document.getElementById('cloud-audio-player');
+
+        const statPrecisionTitle = document.querySelector('div.grid > div:nth-child(1) > span:nth-child(1)');
+        const statPrecisionVal = document.getElementById('stat-precision');
+        const statDifficultyTitle = document.querySelector('div.grid > div:nth-child(2) > span:nth-child(1)');
+        const statDifficultyVal = document.getElementById('stat-difficulty');
+        const statDomainTitle = document.querySelector('div.grid > div:nth-child(3) > span:nth-child(1)');
+        const statDomainVal = document.getElementById('stat-domain');
+
         const hudHeader = document.getElementById('hud-header');
         const hudFooter = document.getElementById('hud-footer');
         const controller = document.getElementById('recording-controller');
         const controllerArrow = document.getElementById('controller-arrow');
+        const controllerPing = document.getElementById('controller-ping');
+        
         const teleprompterText = document.getElementById('teleprompter-text');
         const teleprompterNum = document.getElementById('teleprompter-num');
         const speakingWave = document.getElementById('speaking-wave');
+        const unlockerOverlay = document.getElementById('audio-unlocker-overlay');
+        const diagLogEl = document.getElementById('diag-log');
 
-        // 获取可用语音
-        function loadVoices() {
-            return new Promise((resolve) => {
-                const voices = window.speechSynthesis.getVoices();
-                if (voices.length) {
-                    speechVoices = voices;
-                    resolve(voices);
-                } else {
-                    window.speechSynthesis.onvoiceschanged = () => {
-                        speechVoices = window.speechSynthesis.getVoices();
-                        resolve(speechVoices);
-                    };
-                }
-            });
+        function diagLog(msg, type = 'info') {
+            let color = 'text-zinc-400';
+            if (type === 'ok') color = 'text-neonGreen';
+            if (type === 'err') color = 'text-neonOrange font-bold';
+            if (type === 'warn') color = 'text-neonYellow';
+
+            const logDiv = document.createElement('div');
+            logDiv.className = color;
+            logDiv.textContent = `> ${msg}`;
+            diagLogEl.appendChild(logDiv);
+            diagLogEl.scrollTop = diagLogEl.scrollHeight;
         }
 
-        // 根据性别选择最佳中文语音
-        function getBestVoice(gender) {
-            const zhVoices = speechVoices.filter(v => v.lang.startsWith('zh'));
-            if (gender === 'male') {
-                // 优先选择男声：通常包含 Yunxi, Daniel, Kangkang, 或 name 不包含 Tingting/Xiaoxiao
-                const maleVoice = zhVoices.find(v => 
-                    v.name.includes('Yunxi') || v.name.includes('Daniel') || 
-                    v.name.includes('Kangkang') || v.name.includes('Guy')
-                );
-                if (maleVoice) return maleVoice;
-                // 回退: 选第一个非 Tingting 的
-                const notFemale = zhVoices.find(v => !v.name.includes('Ting') && !v.name.includes('Xiao'));
-                if (notFemale) return notFemale;
-            } else {
-                // 女声优先 Xiaoxiao, Tingting, Yaoyao
-                const femaleVoice = zhVoices.find(v => 
-                    v.name.includes('Xiaoxiao') || v.name.includes('Tingting') || 
-                    v.name.includes('Yaoyao') || v.name.includes('Hanhan')
-                );
-                if (femaleVoice) return femaleVoice;
-            }
-            // 最终回退: 任何中文语音
-            if (zhVoices.length) return zhVoices[0];
-            // 超回退: 英文语音
-            return speechVoices.find(v => v.lang.startsWith('en')) || null;
-        }
-
-        // 核心语音函数 - 使用 Web Speech API
-        function speakText(text) {
-            if (!text) return;
+        function init() {
+            renderCard(0);
+            buildQuickJumpControls();
             
-            // 停止当前正在播放的语音
-            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-                window.speechSynthesis.cancel();
-            }
-            if (currentUtterance) {
-                window.speechSynthesis.cancel();
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'zh-CN';
-            utterance.rate = 1.05;
-            utterance.pitch = 1.0;
-            utterance.volume = 1;
-
-            // 设置语音
-            const bestVoice = getBestVoice(preferredGender);
-            if (bestVoice) utterance.voice = bestVoice;
-
-            // 波动动画
-            utterance.onstart = () => {
-                if (speakingWave) speakingWave.classList.remove('hidden');
+            // 绑定在线播放器事件
+            player.onplay = () => {
+                speakingWave.classList.remove('hidden');
             };
-            utterance.onend = () => {
-                if (speakingWave) speakingWave.classList.add('hidden');
-                currentUtterance = null;
+            player.onended = () => {
+                speakingWave.classList.add('hidden');
+                diagLog('音频轨道正常播放完毕', 'ok');
             };
-            utterance.onerror = () => {
-                if (speakingWave) speakingWave.classList.add('hidden');
-                currentUtterance = null;
+            player.onerror = () => {
+                speakingWave.classList.add('hidden');
+                diagLog('❌ 云端接口网络阻塞或解析错误', 'err');
             };
-
-            currentUtterance = utterance;
-            window.speechSynthesis.speak(utterance);
         }
 
-        // 切换性别
-        window.setVoiceGender = (e, gender) => {
+        // ========== 云端微缩接口接入 [用A] ==========
+        function speakCloud(text) {
+            if (!isAudioUnlocked) return;
+            
+            player.pause();
+
+            const url = `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text)}&v=${selectedVoice}`;
+            
+            diagLog(`🚀 正在使用 ${selectedVoice} 语音包拉取音频流...`);
+            player.src = url;
+            player.playbackRate = playbackRate; // 应用语速 [用A]
+            
+            const playPromise = player.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    diagLog(`▶️ 成功触发云端口播：${text.substring(0, 10)}...`, 'ok');
+                }).catch(error => {
+                    diagLog(`⚠️ 浏览器拦截首播: ${error.message}`, 'warn');
+                });
+            }
+        }
+
+        function testUnlock() {
+            isAudioUnlocked = true;
+            unlockerOverlay.classList.add('hidden'); 
+            diagLog('音频管道机制已解锁，加载首张云端音效。', 'ok');
+            speakCloud(CARD_DATA[currentIndex].prompter);
+        }
+
+        // ========== 实时音色切换控制 [推D] ==========
+        function updateVoice(val, e) {
             if (e) e.stopPropagation();
-            preferredGender = gender;
-            const maleBtn = document.getElementById('voice-male');
-            const femaleBtn = document.getElementById('voice-female');
+            selectedVoice = val;
+            diagLog(`音色已动态切换为: ${selectedVoice}`, 'warn');
             
-            if (gender === 'male') {
-                maleBtn.className = "bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all";
-                femaleBtn.className = "bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700";
-            } else {
-                femaleBtn.className = "bg-yellow-500 text-black py-2 rounded-lg font-black text-xs tracking-wider flex items-center justify-center gap-1 shadow-md transition-all";
-                maleBtn.className = "bg-zinc-800 text-zinc-300 py-2 rounded-lg font-bold text-xs tracking-wide flex items-center justify-center gap-1 hover:bg-zinc-700";
+            // 切换音色时立即重播当前卡片，提供直观反馈
+            if (isAudioUnlocked) {
+                speakCloud(CARD_DATA[currentIndex].prompter);
             }
+        }
+
+        // ========== 实时语速控制 [推D] ==========
+        function updateSpeechRate(val, e) {
+            if (e) e.stopPropagation();
+            playbackRate = parseFloat(val);
+            document.getElementById('rate-value').textContent = playbackRate.toFixed(2) + 'x';
             
-            // 重新朗读当前内容
-            if (CARD_DATA[currentIndex]) {
-                speakText(CARD_DATA[currentIndex].prompter);
-            }
-        };
+            player.playbackRate = playbackRate;
+            diagLog(`云端拉取速率同步更新为: ${playbackRate.toFixed(2)}x`, 'warn');
+        }
+
+        function stopAll(e) {
+            if (e) e.stopPropagation();
+            player.pause();
+            speakingWave.classList.add('hidden');
+            diagLog('⏹ 已强行终止云端音频播放', 'warn');
+        }
 
         function renderCard(index) {
             const data = CARD_DATA[index];
@@ -315,37 +521,93 @@
             cardHook.textContent = data.hook;
             cardDesc.textContent = data.desc;
             hudCounter.textContent = `${index + 1} / ${CARD_DATA.length}`;
+            
+            statPrecisionTitle.textContent = data.precision;
+            statPrecisionVal.textContent = data.precisionVal;
+            statDifficultyTitle.textContent = data.difficulty;
+            statDifficultyVal.textContent = data.difficultyVal;
+            statDomainTitle.textContent = data.domain;
+            statDomainVal.textContent = data.domainVal;
+
             teleprompterText.textContent = data.prompter;
             teleprompterNum.textContent = `${index + 1} / ${CARD_DATA.length}`;
+
+            let activeColorClass = 'text-neonYellow bg-neonYellow/10 border-neonYellow/20';
+            let activeGlowColor = 'rgba(255, 255, 0, 0.15)';
+            let activePingClass = 'bg-neonYellow';
+
+            if (data.color === 'neonGreen') {
+                activeColorClass = 'text-neonGreen bg-neonGreen/10 border-neonGreen/20';
+                activeGlowColor = 'rgba(57, 255, 20, 0.15)';
+                activePingClass = 'bg-neonGreen';
+                cardHookBox.className = "border-l-[6px] border-neonGreen bg-neonGreen/10 pl-3.5 py-2.5 my-1.5 rounded-r-lg relative z-10 transition-colors";
+                statPrecisionVal.className = "text-neonGreen font-black text-sm mt-0.5 tracking-tight";
+                statDomainVal.className = "text-neonGreen font-black text-[11px] truncate mt-0.5 tracking-tighter";
+            } else if (data.color === 'neonBlue') {
+                activeColorClass = 'text-neonBlue bg-neonBlue/10 border-neonBlue/20';
+                activeGlowColor = 'rgba(0, 240, 255, 0.15)';
+                activePingClass = 'bg-neonBlue';
+                cardHookBox.className = "border-l-[6px] border-neonBlue bg-neonBlue/10 pl-3.5 py-2.5 my-1.5 rounded-r-lg relative z-10 transition-colors";
+                statPrecisionVal.className = "text-neonBlue font-black text-sm mt-0.5 tracking-tight";
+                statDomainVal.className = "text-neonBlue font-black text-[11px] truncate mt-0.5 tracking-tighter";
+            } else if (data.color === 'neonPink') {
+                activeColorClass = 'text-neonPink bg-neonPink/10 border-neonPink/20';
+                activeGlowColor = 'rgba(255, 0, 127, 0.15)';
+                activePingClass = 'bg-neonPink';
+                cardHookBox.className = "border-l-[6px] border-neonPink bg-neonPink/10 pl-3.5 py-2.5 my-1.5 rounded-r-lg relative z-10 transition-colors";
+                statPrecisionVal.className = "text-neonPink font-black text-sm mt-0.5 tracking-tight";
+                statDomainVal.className = "text-neonPink font-black text-[11px] truncate mt-0.5 tracking-tighter";
+            } else if (data.color === 'neonOrange') {
+                activeColorClass = 'text-neonOrange bg-neonOrange/10 border-neonOrange/20';
+                activeGlowColor = 'rgba(255, 95, 31, 0.15)';
+                activePingClass = 'bg-neonOrange';
+                cardHookBox.className = "border-l-[6px] border-neonOrange bg-neonOrange/10 pl-3.5 py-2.5 my-1.5 rounded-r-lg relative z-10 transition-colors";
+                statPrecisionVal.className = "text-neonOrange font-black text-sm mt-0.5 tracking-tight";
+                statDomainVal.className = "text-neonOrange font-black text-[11px] truncate mt-0.5 tracking-tighter";
+            } else {
+                cardHookBox.className = "border-l-[6px] border-neonOrange bg-neonOrange/10 pl-3.5 py-2.5 my-1.5 rounded-r-lg relative z-10 transition-colors";
+                statPrecisionVal.className = "text-neonYellow font-black text-sm mt-0.5 tracking-tight";
+                statDomainVal.className = "text-neonGreen font-black text-[11px] truncate mt-0.5 tracking-tighter";
+            }
+
+            cardTag.className = `text-neonYellow font-black tracking-widest text-[10px] uppercase px-2.5 py-1 rounded-md transition-colors ${activeColorClass}`;
+            ambientGlow.style.backgroundColor = activeGlowColor;
+            controllerPing.className = `w-1.5 h-1.5 rounded-full animate-ping ${activePingClass}`;
             
             document.querySelectorAll('.jump-btn').forEach((btn, idx) => {
                 if (idx === index) {
-                    btn.classList.add('bg-yellow-500', 'text-black', 'shadow-md', 'border-yellow-400');
+                    btn.classList.add('bg-zinc-100', 'text-black');
                     btn.classList.remove('bg-zinc-800', 'text-zinc-400');
                 } else {
-                    btn.classList.remove('bg-yellow-500', 'text-black', 'shadow-md', 'border-yellow-400');
+                    btn.classList.remove('bg-zinc-100', 'text-black');
                     btn.classList.add('bg-zinc-800', 'text-zinc-400');
                 }
             });
-            
-            speakText(data.prompter);
+
+            if (isAudioUnlocked) {
+                speakCloud(data.prompter);
+            }
         }
 
         function switchPage(nextIndex) {
             if (isTransitioning) return;
             isTransitioning = true;
+
             cardElement.classList.remove('card-active');
             cardElement.classList.add('card-exit');
+
             setTimeout(() => {
                 renderCard(nextIndex);
                 currentIndex = nextIndex;
+
                 cardElement.classList.remove('card-exit');
                 cardElement.classList.add('card-enter-prep');
                 void cardElement.offsetWidth;
                 cardElement.classList.remove('card-enter-prep');
                 cardElement.classList.add('card-active');
+
                 setTimeout(() => { isTransitioning = false; }, 140);
-            }, 70);
+            }, 70); 
         }
 
         function nextPage() {
@@ -360,21 +622,27 @@
             nextPage();
         });
 
-        window.toggleController = (e) => {
+        function toggleController(e) {
             if (e) e.stopPropagation();
-            if (isControllerExpanded) collapseController(); else expandController();
-        };
+            if (isControllerExpanded) {
+                collapseController();
+            } else {
+                expandController();
+            }
+        }
+
         function expandController() {
             isControllerExpanded = true;
-            controller.classList.remove('translate-y-[calc(100%-42px)]');
+            controller.classList.remove('translate-y-[calc(100%-36px)]');
             controller.classList.add('translate-y-0');
-            controllerArrow.innerHTML = '▼ 收起控制台';
+            controllerArrow.textContent = '▼ 点击收起面板';
         }
+
         function collapseController() {
             isControllerExpanded = false;
             controller.classList.remove('translate-y-0');
-            controller.classList.add('translate-y-[calc(100%-42px)]');
-            controllerArrow.innerHTML = '▲ 展开控制台';
+            controller.classList.add('translate-y-[calc(100%-36px)]');
+            controllerArrow.textContent = '▲ 点击展开面板';
         }
 
         function buildQuickJumpControls() {
@@ -382,39 +650,29 @@
             container.innerHTML = '';
             CARD_DATA.forEach((_, idx) => {
                 const btn = document.createElement('button');
-                btn.className = `jump-btn bg-zinc-800 text-zinc-400 font-black py-2 rounded-xl text-center text-xs transition-all hover:scale-105 active:scale-95`;
+                btn.className = `jump-btn bg-zinc-800 text-zinc-400 font-bold py-1.5 rounded text-center text-[10px]`;
                 btn.textContent = `${idx + 1}`;
-                btn.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    if (isTransitioning) return;
-                    switchPage(idx); 
-                };
+                btn.onclick = (e) => { e.stopPropagation(); switchPage(idx); };
                 container.appendChild(btn);
-            });
-            document.querySelectorAll('.jump-btn').forEach((btn, idx) => {
-                if (idx === currentIndex) {
-                    btn.classList.add('bg-yellow-500', 'text-black', 'shadow-md', 'border-yellow-400');
-                    btn.classList.remove('bg-zinc-800', 'text-zinc-400');
-                }
             });
         }
 
-        window.toggleAutoplay = (e) => {
+        function toggleAutoplay(e) {
             if (e) e.stopPropagation();
             const btn = document.getElementById('btn-autoplay');
             if (autoplayInterval) {
                 clearInterval(autoplayInterval);
                 autoplayInterval = null;
-                btn.textContent = '开启巡航';
-                btn.className = "w-full bg-red-950/80 text-red-400 border border-red-700 py-2 rounded-lg font-bold text-[11px] transition-all active:scale-95";
+                btn.textContent = '开启自动切页';
+                btn.className = 'bg-red-950 text-red-400 border border-red-800 py-1 rounded font-bold text-center';
             } else {
-                autoplayInterval = setInterval(() => { nextPage(); }, 5200);
-                btn.textContent = '停止巡航';
-                btn.className = "w-full bg-emerald-950 text-emerald-400 border border-emerald-700 py-2 rounded-lg font-bold text-[11px] transition-all active:scale-95";
+                autoplayInterval = setInterval(() => { nextPage(); }, 5200); 
+                btn.textContent = '停止自动切页';
+                btn.className = 'bg-emerald-950 text-emerald-400 border border-emerald-800 py-1 rounded font-bold text-center';
             }
-        };
+        }
 
-        window.toggleHUD = (e) => {
+        function toggleHUD(e) {
             if (e) e.stopPropagation();
             const isHidden = hudHeader.classList.contains('opacity-0');
             if (isHidden) {
@@ -424,15 +682,9 @@
                 hudHeader.classList.add('opacity-0');
                 hudFooter.classList.add('opacity-0');
             }
-        };
+        }
 
-        // 初始化
-        window.onload = async () => {
-            await loadVoices();
-            renderCard(0);
-            buildQuickJumpControls();
-            controller.classList.add('translate-y-[calc(100%-42px)]');
-        };
+        window.onload = init;
     </script>
 </body>
 </html>
