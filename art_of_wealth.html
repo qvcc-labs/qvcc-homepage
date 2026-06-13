@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="w-full h-full overflow-hidden select-none touch-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>THE ART OF WEALTH · 不确定性年代的投资心法</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { dark: '#060B13', card: '#0D1B2A', gold: '#D4AF37', goldDim: '#9A7B30', text: '#E2E8F0' }
+                    },
+                    fontFamily: { sans: ['Inter', 'Noto Sans SC', 'Helvetica Neue', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body { position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden; background-color: #060B13; }
+        .card-transition { transition: all 140ms cubic-bezier(0.25, 1, 0.5, 1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="w-full h-full flex flex-col justify-between font-sans text-brand-text antialiased">
+
+    <main class="relative flex-1 w-full flex items-center justify-center overflow-hidden p-4 select-none">
+        <div id="canvas916" class="relative w-full max-w-[380px] aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col justify-between p-6 card-transition border border-neutral-900">
+            
+            <div id="hudOverlay" class="absolute inset-0 pointer-events-none z-30 flex flex-col justify-between p-5 font-mono text-[10px] tracking-wider text-neutral-600">
+                <div class="flex justify-between items-center w-full">
+                    <div class="flex items-center gap-1.5 text-brand-gold font-bold animate-pulse">
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-gold"></span>REC
+                    </div>
+                    <div class="border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-500">9:16 ULTRA</div>
+                </div>
+                <div class="flex justify-between items-center w-full border-t border-neutral-900/50 pt-2">
+                    <div id="hudProgress">心法 01 / 15</div>
+                    <div class="tracking-tighter">THE ART OF WEALTH</div>
+                </div>
+            </div>
+
+            <div class="w-full h-full flex flex-col justify-center items-center z-10">
+                <div id="mainCard" class="w-full bg-brand-card text-brand-text p-5 rounded-xl shadow-2xl flex flex-col justify-between min-h-[88%] card-transition transform scale-100 opacity-100 border border-neutral-800/60">
+                    
+                    <div class="mb-2">
+                        <div class="text-[9px] font-bold tracking-[0.2em] text-brand-gold/50 uppercase">
+                            不确定性年代的投资心法
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div id="cardSeq" class="text-[11px] font-mono font-semibold tracking-[0.1em] text-brand-gold/70 mb-1">序篇</div>
+                        <h1 id="cardTitle" class="text-[26px] md:text-[28px] font-bold leading-[1.35] text-white tracking-tight">
+                            加载中...
+                        </h1>
+                    </div>
+
+                    <div id="cardHookWrapper" class="border-l-[4px] border-brand-gold bg-brand-gold/5 p-3 my-2 rounded-r-lg card-transition">
+                        <p id="cardHook" class="text-[13px] font-semibold text-brand-gold leading-relaxed">
+                            数据初始化中...
+                        </p>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-neutral-800/60">
+                        <p id="cardDesc" class="text-[11px] text-neutral-400 leading-relaxed font-normal">
+                            请稍候...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full bg-neutral-950 border-t border-neutral-900 px-4 pt-3 pb-6 z-40 select-none">
+        <div class="max-w-xl mx-auto flex flex-col gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <button id="btnPlayPause" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 active:scale-95 transition-all text-neutral-300 font-medium">
+                    <svg class="w-3.5 h-3.5 fill-current text-brand-gold" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <span>开启巡航</span>
+                </button>
+                <button id="btnToggleHud" class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 active:scale-95 transition-all text-neutral-300 font-medium">
+                    <span>隐藏 HUD</span>
+                </button>
+                <div class="flex items-center gap-2 bg-neutral-900 border border-neutral-800 rounded-lg px-2.5 py-1">
+                    <span class="text-neutral-500 scale-90">语速</span>
+                    <input id="sliderSpeed" type="range" min="0.7" max="1.4" step="0.05" value="0.95" class="w-full accent-brand-gold bg-neutral-700 h-1 rounded-lg cursor-pointer">
+                    <span id="txtSpeed" class="text-neutral-400 font-mono w-8 text-right">0.95x</span>
+                </div>
+                <div class="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-1">
+                    <select id="selectVoice" class="w-full bg-transparent text-neutral-300 outline-none cursor-pointer pr-1">
+                        <option value="zh-CN-YunjianNeural" class="bg-neutral-900" selected>云健 (专业解说)</option>
+                        <option value="zh-CN-YunxiNeural" class="bg-neutral-900">云希 (男声)</option>
+                        <option value="zh-CN-XiaoxiaoNeural" class="bg-neutral-900">晓晓 (女声)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <div class="text-[10px] text-neutral-600 font-mono tracking-widest uppercase">15 STRATEGIES MATRIX</div>
+                <div id="matrixGrid" class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar w-full snap-x"></div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="unlockLockout" class="fixed inset-0 bg-neutral-950 z-50 flex flex-col justify-center items-center p-6 text-center select-none cursor-pointer">
+        <div class="w-14 h-14 rounded-full border border-brand-gold/40 flex items-center justify-center mb-5 animate-pulse bg-brand-card shadow-lg">
+            <svg class="w-5 h-5 text-brand-gold fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        </div>
+        <h2 class="text-lg font-medium tracking-[0.15em] mb-2 text-white">THE ART OF WEALTH</h2>
+        <p class="text-xs text-neutral-500 max-w-xs leading-relaxed font-light">点击接入 · 同步十五篇深度心法（序+十三篇+终）</p>
+    </div>
+
+    <script>
+        // THE ART OF WEALTH · 十三篇深度心法（序+计+作战+谋攻+形+势+虚实+军争+九变+行军+地形+九地+火攻+用间+终）
+        // 卖出与时机心法已融入「势篇第五」（移动止盈/分批卖出）和「行军篇第九」（狂热顶部信号）
+        const SCRIPT_DATA = [
+            { 
+                seq: "序篇",
+                title: "先为不可胜", 
+                hook: "在不确定性的时代，资本市场的本质并非财富的温床，而是流动性博弈的终极竞技场。", 
+                desc: "【推荐收藏】建议您将此心法纳入每日开盘前的必修功课，反复聆听以校准认知与心智主权。多数投资者在狂热中误判时代红利，在震荡市中死扛认知偏见。本套心法不传授盲目进攻之术，而是指引您在绝对不确定性中构筑不可被击穿的防御体系。\n\n【今日行动】审阅您的投资组合，确认是否存在单支标的仓位超过总资产20%的情形。若有，明日执行减仓。",
+                voiceText: "推荐收藏，建议您将此心法纳入每日开盘前的必修功课，反复聆听以校准认知与心智主权。序篇：先为不可胜。在不确定性的时代，资本市场的本质并非财富的温床，而是流动性博弈的终极竞技场。多数投资者在狂热中误判时代红利，在震荡市中死扛认知偏见。本套心法不传授盲目进攻之术，而是指引您在绝对不确定性中构筑不可被击穿的防御体系。"
+            },
+            { 
+                seq: "计篇第一",
+                title: "盈亏比是唯一的入场依据", 
+                hook: "任何单项交易的预期收益，必须至少为潜在亏损的两倍，否则不予考虑。", 
+                desc: "零售投资者最致命的错误在于：为博取5%的收益而承担10%的回撤风险，这在数学期望上属于负和博弈。唯有高胜率、高盈亏比的配置才值得动用资本。\n\n【今日行动】下周拟执行的每笔交易，须事先书面确认止损价位与止盈目标，核算盈亏比是否不低于2:1，未达标者放弃。",
+                voiceText: "计篇第一：盈亏比是唯一的入场依据。任何单项交易的预期收益，必须至少为潜在亏损的两倍，否则不予考虑。零售投资者最致命的错误在于，为博取百分之五的收益而承担百分之十的回撤风险，这在数学期望上属于负和博弈。唯有高胜率高盈亏比的配置才值得动用资本。"
+            },
+            { 
+                seq: "作战篇第二",
+                title: "弹药分仓与头寸管理纪律", 
+                hook: "永不以单笔满仓方式暴露全部资本。采用三阶段建仓法则：试探、加码、决胜，各批次之间保留充分的价格缓冲区间。", 
+                desc: "大规模资金的进出必然产生显著滑点，头寸规模本身就是一种风险。管理大额委托时，须通过精密网格化策略将整体仓位拆解为若干子单元，以平滑市场冲击。\n\n【今日行动】下一次开仓之前，须预先设定三个明确的买入价位及其对应的仓位比例，并严格遵照执行。",
+                voiceText: "作战篇第二：弹药分仓与头寸管理纪律。永不以单笔满仓方式暴露全部资本。采用三阶段建仓法则，试探、加码、决胜，各批次之间保留充分的价格缓冲区间。大规模资金的进出必然产生显著滑点，头寸规模本身就是一种风险。管理大额委托时，须通过精密网格化策略将整体仓位拆解为若干子单元，以平滑市场冲击。"
+            },
+            { 
+                seq: "谋攻篇第三",
+                title: "以可承受损失为限", 
+                hook: "严禁投入可能导致生活品质崩塌或流动性枯竭的资本。投资的本质是一场无限游戏，任何单次博弈均不值得以家庭财务安全为代价。", 
+                desc: "借贷资金、杠杆工具、养老储备、住房按揭资金——凡亏损后导致失眠的资金来源，均不应进入风险敞口。\n\n【今日行动】评估当前账户中的全部资产，若全额亏损将如何影响您的生活品质？若构成实质性冲击，明日至少提取50%资金离场。",
+                voiceText: "谋攻篇第三：以可承受损失为限。严禁投入可能导致生活品质崩塌或流动性枯竭的资本。投资的本质是一场无限游戏，任何单次博弈均不值得以家庭财务安全为代价。借贷资金、杠杆工具、养老储备、住房按揭资金，凡亏损后导致失眠的资金来源，均不应进入风险敞口。"
+            },
+            { 
+                seq: "形篇第四",
+                title: "止损铁律与关键位对冲", 
+                hook: "开仓之前须预设止损红线。关键支撑位一旦失守，须无条件离场；同时运用期权等工具构筑防御工事。", 
+                desc: "止损并非'再观察'，而是风险控制的核心保险丝。在关键趋势位必须部署对冲保护机制，绝不允许风险无约束地击穿净值安全垫。\n\n【今日行动】盘点当前所有持仓，确认每一笔是否具备明确的止损价位？缺失者，须于今日补全。",
+                voiceText: "形篇第四：止损铁律与关键位对冲。开仓之前须预设止损红线，关键支撑位一旦失守，须无条件离场，同时运用期权等工具构筑防御工事。止损并非再观察，而是风险控制的核心保险丝。在关键趋势位必须部署对冲保护机制，绝不允许风险无约束地击穿净值安全垫。"
+            },
+            { 
+                seq: "势篇第五",
+                title: "空仓等待与卖出时机", 
+                hook: "绝大多数时间应当保持空仓或极低仓位。卖出不是等到亏损才考虑，而是在买入时就已预设移动止盈线。", 
+                desc: "零售投资者亏损的首要根源并非方向判断失误，而是交易频率过高，以及不懂获利了结。采用移动止盈法则：当价格从最高点回撤8%-10%，无条件了结半数仓位。卖出与建仓对称，采用三阶段分批了结：目标价位触达卖出三分之一，继续上涨再卖三分之一，剩余仓位以移动止盈守护。资本市场每年仅有两至三次真正意义上的高确定性机会，精准捕捉足矣。\n\n【今日行动】若过去一个月内您的交易次数超过十笔，请强制暂停交易一周。同时，为当前盈利持仓设定三个卖出价位，写入交易计划。",
+                voiceText: "势篇第五：空仓等待与卖出时机。绝大多数时间应当保持空仓或极低仓位。卖出不是等到亏损才考虑，而是在买入时就已预设移动止盈线。零售投资者亏损的首要根源并非方向判断失误，而是交易频率过高，以及不懂获利了结。采用移动止盈法则，当价格从最高点回撤百分之八到十，无条件了结半数仓位。卖出与建仓对称，采用三阶段分批了结，目标价位触达卖出三分之一，继续上涨再卖三分之一，剩余仓位以移动止盈守护。资本市场每年仅有两至三次真正意义上的高确定性机会，精准捕捉足矣。"
+            },
+            { 
+                seq: "虚实篇第六",
+                title: "恪守能力圈边界", 
+                hook: "远离超出认知范畴的金融品种。认知半径之外的收益，最终将以另一种方式归还市场。", 
+                desc: "他人通过加密货币、衍生品或做空策略获利——与您无关。您的使命在于自身精通的领域内减少失误。\n\n【今日行动】列出您最为熟悉的三个投资品类，未来三个月内仅在这三个领域内操作，其余一概规避。",
+                voiceText: "虚实篇第六：恪守能力圈边界。远离超出认知范畴的金融品种。认知半径之外的收益，最终将以另一种方式归还市场。他人通过加密货币、衍生品或做空策略获利，与您无关。您的使命在于自身精通的领域内减少失误。"
+            },
+            { 
+                seq: "军争篇第七",
+                title: "宏观优先于微观", 
+                hook: "当大盘趋势进入下行通道时，任何个股的基本面优势都难以独善其身。先判大势，再择个股。", 
+                desc: "切勿为了追逐某一具体行业的边际红利，而忽视整体市场破位的系统性风险。在宏观周期的倾覆性力量面前，任何局部的优质资产均难以保全。\n\n【今日行动】下次下单前须自问——若明日大盘下跌2%，此笔交易是否仍有足够的安全边际？若否，放弃。",
+                voiceText: "军争篇第七：宏观优先于微观。当大盘趋势进入下行通道时，任何个股的基本面优势都难以独善其身。先判大势，再择个股。切勿为了追逐某一具体行业的边际红利，而忽视整体市场破位的系统性风险。在宏观周期的倾覆性力量面前，任何局部的优质资产均难以保全。"
+            },
+            { 
+                seq: "九变篇第八",
+                title: "情绪异常时强制离场", 
+                hook: "愤怒、焦虑、亢奋、沮丧——上述情绪状态下的任何投资决策，大概率将偏离理性轨道。", 
+                desc: "连续亏损后的'翻本'冲动，与连续盈利后的'乘胜追击'欲望，是投资行为中最危险的两个时刻。\n\n【今日行动】为自己订立一条刚性纪律——任何情绪波动显著的交易日，强制关闭交易终端，次日再行开启。",
+                voiceText: "九变篇第八：情绪异常时强制离场。愤怒、焦虑、亢奋、沮丧，上述情绪状态下的任何投资决策，大概率将偏离理性轨道。连续亏损后的翻本冲动，与连续盈利后的乘胜追击欲望，是投资行为中最危险的两个时刻。"
+            },
+            { 
+                seq: "行军篇第九",
+                title: "警惕狂热顶部与离场信号", 
+                hook: "真正的卖出时机往往出现在市场最亢奋的时刻。当身边从不谈论股票的人开始推荐个股，当融资余额创历史新高——这是分批离场的倒计时。", 
+                desc: "每一轮重大崩盘之前，均伴随着'新技术范式'或'新周期理论'的叙事。识别顶部信号：估值突破历史极值、成交量异常放大后萎缩、均线出现死叉、关键支撑位连续失守。此时不应加仓，而应分批锁定利润。顺境中滋生的过度自信是资本毁灭的催化剂，顶级机构会在市场狂热时果断离场。\n\n【今日行动】回顾过去三年中您'最具信心'的交易记录，统计其中失误的比例。同时，检查当前市场是否存在上述狂热信号，若有，明日执行减仓。",
+                voiceText: "行军篇第九：警惕狂热顶部与离场信号。真正的卖出时机往往出现在市场最亢奋的时刻。当身边从不谈论股票的人开始推荐个股，当融资余额创历史新高，这是分批离场的倒计时。每一轮重大崩盘之前，均伴随着新技术范式或新周期理论的叙事。识别顶部信号，估值突破历史极值、成交量异常放大后萎缩、均线出现死叉、关键支撑位连续失守。此时不应加仓，而应分批锁定利润。顺境中滋生的过度自信是资本毁灭的催化剂，顶级机构会在市场狂热时果断离场。"
+            },
+            { 
+                seq: "地形篇第十",
+                title: "市场永远正确", 
+                hook: "当您的分析结论与市场实际走势产生背离时，错误的是您，而非市场。认错须果断，转身须敏捷。", 
+                desc: "多数投资者的重大亏损并非源于方向判断失误，而在于误判之后拒绝认错，持续加仓以'摊平成本'——此乃最致命的交易恶习。\n\n【今日行动】若您的账户中存在任何浮亏超过10%且未设止损的持仓，无论主观判断如何乐观，明日须无条件清仓。",
+                voiceText: "地形篇第十：市场永远正确。当您的分析结论与市场实际走势产生背离时，错误的是您，而非市场。认错须果断，转身须敏捷。多数投资者的重大亏损并非源于方向判断失误，而在于误判之后拒绝认错，持续加仓以摊平成本，此乃最致命的交易恶习。"
+            },
+            { 
+                seq: "九地篇第十一",
+                title: "沉没成本不是成本", 
+                hook: "过去亏损的幅度、持仓的时长——这些历史沉没成本均不应影响当下的决策。只审视未来预期，不回头。", 
+                desc: "散户最常见的心理陷阱：'这支标的我已经亏损30%，卖出即确认亏损，不如继续持有等待回本'——此乃认知谬误。未来走势与过去亏损无关。\n\n【今日行动】检查每一笔持仓，反问自己：若此刻手中并无此头寸，我会在当前价位买入吗？若答案是否定的，立即清仓。",
+                voiceText: "九地篇第十一：沉没成本不是成本。过去亏损的幅度、持仓的时长，这些历史沉没成本均不应影响当下的决策。只审视未来预期，不回头。散户最常见的心理陷阱是，这支标的我已经亏损百分之三十，卖出即确认亏损，不如继续持有等待回本，此乃认知谬误。未来走势与过去亏损无关。"
+            },
+            { 
+                seq: "火攻篇第十二",
+                title: "警惕成功经验的反噬效应", 
+                hook: "上一个周期的获利范式，往往演变为下一个周期的亏损根源。市场在进化，您的认知亦须同步迭代。", 
+                desc: "牛市环境中的超额收益，并不等同于个人投资能力的印证。当宏观底座发生范式迁移，固守过往成功模式无异于刻舟求剑。\n\n【今日行动】复盘您过去三年中收益最高的三笔交易，审慎自问——若同样的机会再度浮现，您能否重现此等收益？若答案系'运气使然'，则须重新构建投资框架。",
+                voiceText: "火攻篇第十二：警惕成功经验的反噬效应。上一个周期的获利范式，往往演变为下一个周期的亏损根源。市场在进化，您的认知亦须同步迭代。牛市环境中的超额收益，并不等同于个人投资能力的印证。当宏观底座发生范式迁移，固守过往成功模式无异于刻舟求剑。"
+            },
+            { 
+                seq: "用间篇第十三",
+                title: "过滤噪音，跨维学习", 
+                hook: "99%的财经新闻与市场评论是噪音。真正有价值的输入来自三个维度：历史周期、兵法思维、地缘格局。", 
+                desc: "信息过载比信息匮乏更危险。每天刷新闻不会让您赚更多钱，只会让您更焦虑、更频繁交易。顶级投资者的优势不在于获取更多信息，而在于知道哪些信息可以忽略——以及从哪里获取别人忽略的洞见。跨领域的知识模型能提供非线性的思维视角，在信息迷雾中提前捕捉隐秘的风险暗流。\n\n【今日行动】第一，关闭所有财经App的推送通知，只保留K线软件。第二，本周阅读一篇历史、军事或地缘政治相关的非金融文章，记录一个可用于投资决策的启发。",
+                voiceText: "用间篇第十三：过滤噪音，跨维学习。百分之九十九的财经新闻与市场评论是噪音。真正有价值的输入来自三个维度：历史周期、兵法思维、地缘格局。信息过载比信息匮乏更危险。每天刷新闻不会让您赚更多钱，只会让您更焦虑、更频繁交易。顶级投资者的优势不在于获取更多信息，而在于知道哪些信息可以忽略，以及从哪里获取别人忽略的洞见。跨领域的知识模型能提供非线性的思维视角，在信息迷雾中提前捕捉隐秘的风险暗流。"
+            },
+            { 
+                seq: "终篇",
+                title: "活下去，才有复利", 
+                hook: "资本市场的残酷真相在于：它不奖赏最聪慧的参与者，而是馈赠存活最久的长青者。", 
+                desc: "防守的品质，决定了您在这个市场上存续的年限。全球顶级私人银行的共识是：防御性设计远较进攻性策略更具代际价值。完整经历一轮牛熊周期的洗礼，方能真正领悟投资的本质。\n\n然而，财富管理的终极境界，在于看清那些超越金钱本身的能力——对时间的敬畏、对风险的谦卑、对情绪的掌控、以及对长期主义的信仰。这些品质，才是真正不可被市场剥夺的核心资产。\n\n【今日行动】从十三篇心法中择取您认为最难践行的一条，誊写于便签并粘贴于每日复盘之处。一个月后，更换下一条。",
+                voiceText: "终篇：活下去，才有复利。资本市场的残酷真相在于，它不奖赏最聪慧的参与者，而是馈赠存活最久的长青者。防守的品质，决定了您在这个市场上存续的年限。全球顶级私人银行的共识是，防御性设计远较进攻性策略更具代际价值。完整经历一轮牛熊周期的洗礼，方能真正领悟投资的本质。然而，财富管理的终极境界，在于看清那些超越金钱本身的能力，对时间的敬畏、对风险的谦卑、对情绪的掌控、以及对长期主义的信仰。这些品质，才是真正不可被市场剥夺的核心资产。"
+            }
+        ];
+
+        // 状态管理
+        let currentIndex = 0;
+        let isPlaying = false;
+        let isHudVisible = true;
+        let currentVoice = 'zh-CN-YunjianNeural';
+        let currentSpeed = 0.95;
+
+        const audioA = new Audio();
+        const audioB = new Audio();
+        let activeRoute = 'A';
+
+        const canvas916 = document.getElementById('canvas916');
+        const mainCard = document.getElementById('mainCard');
+        const cardSeq = document.getElementById('cardSeq');
+        const cardTitle = document.getElementById('cardTitle');
+        const cardHook = document.getElementById('cardHook');
+        const cardDesc = document.getElementById('cardDesc');
+        const hudProgress = document.getElementById('hudProgress');
+        const hudOverlay = document.getElementById('hudOverlay');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const btnToggleHud = document.getElementById('btnToggleHud');
+        const sliderSpeed = document.getElementById('sliderSpeed');
+        const txtSpeed = document.getElementById('txtSpeed');
+        const selectVoice = document.getElementById('selectVoice');
+        const matrixGrid = document.getElementById('matrixGrid');
+        const unlockLockout = document.getElementById('unlockLockout');
+
+        function getTtsUrl(text, voice) {
+            return `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text)}&v=${voice}`;
+        }
+
+        function getCardText(index) {
+            return SCRIPT_DATA[index].voiceText;
+        }
+
+        function renderCard(index) {
+            const data = SCRIPT_DATA[index];
+            mainCard.classList.remove('scale-100', 'opacity-100');
+            mainCard.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                cardSeq.innerText = data.seq;
+                cardTitle.innerText = data.title;
+                cardHook.innerText = data.hook;
+                cardDesc.innerHTML = data.desc.replace(/\n\n/g, '<br><br>');
+                mainCard.classList.remove('scale-95', 'opacity-0');
+                mainCard.classList.add('scale-100', 'opacity-100');
+            }, 70);
+            hudProgress.innerText = `心法 ${String(index + 1).padStart(2, '0')} / 15`;
+            document.querySelectorAll('.matrix-item').forEach((item, idx) => {
+                if (idx === index) {
+                    item.classList.remove('bg-neutral-900', 'text-neutral-500', 'border-neutral-800');
+                    item.classList.add('bg-[#D4AF37]', 'text-black', 'border-[#D4AF37]', 'scale-105');
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    item.classList.remove('bg-[#D4AF37]', 'text-black', 'border-[#D4AF37]', 'scale-105');
+                    item.classList.add('bg-neutral-900', 'text-neutral-500', 'border-neutral-800');
+                }
+            });
+        }
+
+        function playStep(index) {
+            if (!isPlaying) return;
+            currentIndex = index;
+            renderCard(currentIndex);
+            const activeAudioElem = (activeRoute === 'A') ? audioA : audioB;
+            const nextAudioElem = (activeRoute === 'A') ? audioB : audioA;
+            const nextIndex = (currentIndex + 1) % SCRIPT_DATA.length;
+            const nextRoute = (activeRoute === 'A') ? 'B' : 'A';
+            activeAudioElem.playbackRate = currentSpeed;
+            const targetUrl = getTtsUrl(getCardText(currentIndex), currentVoice);
+            if (activeAudioElem.src !== targetUrl) activeAudioElem.src = targetUrl;
+            activeAudioElem.play().catch(err => console.log("音频播放:", err));
+            nextAudioElem.src = getTtsUrl(getCardText(nextIndex), currentVoice);
+            nextAudioElem.playbackRate = currentSpeed;
+            nextAudioElem.load();
+            activeAudioElem.onended = () => {
+                if (!isPlaying) return;
+                activeRoute = nextRoute;
+                playStep(nextIndex);
+            };
+        }
+
+        function pauseCruise() {
+            isPlaying = false;
+            audioA.pause();
+            audioB.pause();
+            btnPlayPause.innerHTML = `<svg class="w-3.5 h-3.5 fill-current text-brand-gold" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>开启巡航</span>`;
+            btnPlayPause.classList.remove('border-brand-gold/60', 'text-brand-gold');
+            btnPlayPause.classList.add('border-neutral-800', 'text-neutral-300');
+        }
+
+        function startCruise() {
+            if (isPlaying) return;
+            isPlaying = true;
+            btnPlayPause.innerHTML = `<svg class="w-3.5 h-3.5 fill-current text-brand-gold" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg><span>暂停巡航</span>`;
+            btnPlayPause.classList.remove('border-neutral-800', 'text-neutral-300');
+            btnPlayPause.classList.add('border-brand-gold/60', 'text-brand-gold');
+            playStep(currentIndex);
+        }
+
+        function initMatrixGrid() {
+            matrixGrid.innerHTML = '';
+            SCRIPT_DATA.forEach((item, idx) => {
+                const btn = document.createElement('button');
+                let displayNum = idx + 1;
+                if (idx === 0) displayNum = "序";
+                else if (idx === SCRIPT_DATA.length - 1) displayNum = "终";
+                else displayNum = String(idx);
+                btn.className = `matrix-item flex-none snap-center w-9 h-9 rounded-lg border text-xs font-mono font-bold flex items-center justify-center transition-all bg-neutral-900 text-neutral-500 border-neutral-800 active:scale-90`;
+                btn.innerText = displayNum;
+                btn.addEventListener('click', () => {
+                    const wasPlaying = isPlaying;
+                    pauseCruise();
+                    currentIndex = idx;
+                    renderCard(currentIndex);
+                    audioA.src = "";
+                    audioB.src = "";
+                    activeRoute = 'A';
+                    if (wasPlaying) startCruise();
+                });
+                matrixGrid.appendChild(btn);
+            });
+        }
+
+        btnPlayPause.addEventListener('click', () => { if (isPlaying) pauseCruise(); else startCruise(); });
+        btnToggleHud.addEventListener('click', () => {
+            isHudVisible = !isHudVisible;
+            if (isHudVisible) {
+                hudOverlay.classList.remove('opacity-0');
+                canvas916.classList.remove('rounded-none');
+                canvas916.classList.add('rounded-2xl');
+                btnToggleHud.innerText = "隐藏 HUD";
+            } else {
+                hudOverlay.classList.add('opacity-0');
+                canvas916.classList.remove('rounded-2xl');
+                canvas916.classList.add('rounded-none');
+                btnToggleHud.innerText = "显示 HUD";
+            }
+        });
+        sliderSpeed.addEventListener('input', (e) => {
+            currentSpeed = parseFloat(e.target.value);
+            txtSpeed.innerText = currentSpeed.toFixed(2) + 'x';
+            audioA.playbackRate = currentSpeed;
+            audioB.playbackRate = currentSpeed;
+        });
+        selectVoice.addEventListener('change', (e) => {
+            currentVoice = e.target.value;
+            const wasPlaying = isPlaying;
+            pauseCruise();
+            audioA.src = "";
+            audioB.src = "";
+            if (wasPlaying) startCruise();
+        });
+        unlockLockout.addEventListener('click', () => {
+            unlockLockout.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => unlockLockout.remove(), 200);
+            audioA.src = getTtsUrl(getCardText(0), currentVoice);
+            audioA.play().then(() => startCruise()).catch(() => startCruise());
+        });
+        document.addEventListener('touchmove', (e) => { if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
+        initMatrixGrid();
+        renderCard(0);
+    </script>
+</body>
+</html>
