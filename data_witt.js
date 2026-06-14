@@ -7,7 +7,7 @@ export const THEME_CONFIG = {
     primaryColor: '#b91c1c',
     primaryBgLight: '#fff5f5',
     borderColor: 'rgba(185, 28, 28, 0.35)',
-    footerText: '# 维特根斯坦大模型连续叙事'
+    footerText: '# 维特根斯坦·大语言模型'
 };
 
 export const VOICE_CONFIG = {
