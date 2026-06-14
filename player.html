@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>流动叙事 · 通用卡片音频播放引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="./config.js"></script>
+    
+    <style>
+        * { user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { overflow: hidden; position: fixed; width: 100%; height: 100%; background: #000000; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .screen-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; touch-action: pan-x pan-y; overflow: hidden; }
+        .card-panel { width: 86%; max-width: 380px; height: 560px; background: #ffffff; border-radius: 40px; padding: 20px 22px 24px 22px; box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; overflow: hidden; }
+        .card-content { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .card-image { width: 100%; height: 135px; object-fit: cover; object-position: center; border-radius: 24px; margin-bottom: 14px; background: #eef2ff; display: block; flex-shrink: 0; }
+        .detail-text { flex: 1; overflow-y: auto; font-size: 13.5px; line-height: 1.55; color: #2c3e4f; margin-top: 6px; padding-right: 6px; }
+        .detail-text::-webkit-scrollbar { width: 3px; }
+        .dynamic-main-title { font-family: 'Times New Roman', 'Georgia', 'Songti SC', serif; font-weight: 900; font-size: 20px; line-height: 1.25; flex-shrink: 0; }
+        .red-hook { padding: 8px 12px; margin: 12px 0 10px 0; font-weight: 800; font-size: 12px; line-height: 1.35; flex-shrink: 0; border-radius: 0 14px 14px 0; }
+        .category-tag { font-size: 10px; font-weight: 800; margin-bottom: 6px; flex-shrink: 0; text-transform: uppercase; }
+        .hud-bar { position: absolute; top: 18px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; pointer-events: none; z-index: 30; }
+        .hud-item { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 5px 14px; border-radius: 40px; color: white; font-size: 11px; pointer-events: auto; }
+        .entry-overlay { position: fixed; inset: 0; background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%); z-index: 999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); cursor: pointer; transition: opacity 0.4s ease; }
+        .hide-hud .hud-bar { opacity: 0; visibility: hidden; }
+        .control-console { position: absolute; bottom: 14px; left: 16px; right: 16px; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(24px); border-radius: 56px; padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; z-index: 40; border: 1px solid rgba(255,255,255,0.2); }
+        .ctrl-btn { background: #1e1e1e; color: #f0f0f0; font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 40px; cursor: pointer; }
+        .ctrl-select { background: #1e1e1e; color: white; border-radius: 40px; padding: 5px 10px; font-size: 11px; max-width: 130px; border: none; }
+        .speed-slider { width: 85px; }
+        .grid-menu { display: none; position: absolute; bottom: 80px; left: 20px; right: 20px; background: #111111e6; backdrop-filter: blur(16px); border-radius: 32px; padding: 18px 12px; grid-template-columns: repeat(5, 1fr); gap: 10px; z-index: 45; border: 1px solid #3a3a3a; }
+        .grid-menu.show { display: grid; }
+        .grid-btn { background: #2c2c2c; text-align: center; padding: 10px 4px; border-radius: 60px; font-size: 14px; font-weight: bold; color: #f5f5f5; cursor: pointer; }
+        .footer-note { margin-top: 12px; text-align: right; font-size: 8px; color: #9ca3af; border-top: 1px solid #e9ecef; padding-top: 8px; flex-shrink: 0; }
+        .flash-switch { animation: cardPop 0.18s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
+        @keyframes cardPop { 0% { opacity: 0.6; transform: scale(0.98);} 100% { opacity: 1; transform: scale(1);} }
+        .toast-msg { position: fixed; bottom: 90px; left: 20px; right: 20px; text-align: center; padding: 8px; border-radius: 60px; font-size: 12px; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+        .resume-console-btn { position: absolute; bottom: 20px; right: 20px; width: 44px; height: 44px; border-radius: 44px; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; cursor: pointer; z-index: 50; }
+        @media (max-width: 480px) { .card-panel { height: 530px; padding: 16px 18px 20px; width: 88%;} .card-image { height: 120px; } }
+    </style>
+</head>
+<body>
+<div id="appRoot" class="screen-container">
+    <div id="entryOverlay" class="entry-overlay">
+        <div class="bg-white rounded-3xl p-7 text-center max-w-[300px] shadow-2xl">
+            <div id="welcomeEmoji" class="text-5xl mb-2">🎈</div>
+            <div id="welcomeMainTitle" class="font-black text-2xl tracking-tight text-black">ES6 模块解析中</div>
+            <div id="welcomeSubTitle" class="text-sm text-gray-600 mt-1 mb-1">正在建立解耦管道...</div>
+            <div id="welcomeDescText" class="text-xs text-gray-500 mb-5">若长时间无反应，请确认使用了本地服务环境运行</div>
+            <div id="enterBtn" class="text-white py-2.5 px-6 rounded-full text-sm font-bold inline-block shadow-md" style="background:#555;">⌛ 请稍候</div>
+        </div>
+    </div>
+    
+    <div class="hud-bar" id="hudBar">
+        <div class="hud-item" id="hudTopicIndicator">🎙️ 核心装配就绪</div>
+        <div class="hud-item" id="pageIndicator">PAGE -- / --</div>
+        <div class="hud-item cursor-pointer" id="toggleHudBtn">🎛️ 隐藏</div>
+    </div>
+    
+    <div id="cardContainer" class="card-panel"></div>
+    
+    <div class="control-console" id="consoleBar">
+        <button id="cruiseToggle" class="ctrl-btn">⏸️ 巡航开</button>
+        <select id="voiceSelect" class="ctrl-select"></select>
+        <div style="display:flex; align-items:center; gap:6px;"><span style="color:white; font-size:10px;">🐢语速</span>
+            <input type="range" id="rateSlider" min="0.7" max="1.5" step="0.02" value="0.98" class="speed-slider">
+            <span id="rateVal" style="color:white; font-size:10px; width:32px;">0.98</span>
+        </div>
+        <button id="showGridBtn" class="ctrl-btn">📑 选页</button>
+        <button id="hideConsoleBtn" class="ctrl-btn" style="background:transparent; border:1px solid #555;">🔽 隐藏面板</button>
+    </div>
+    
+    <div id="gridMenu" class="grid-menu"></div>
+    <div id="resumeConsoleBtn" class="resume-console-btn">🎛️</div>
+    <div id="toastMsg" class="toast-msg"></div>
+    
+    <audio id="audioA" preload="metadata" crossorigin="anonymous"></audio>
+    <audio id="audioB" preload="metadata" crossorigin="anonymous"></audio>
+</div>
+
+<script type="module">
+    let THEME_CONFIG, VOICE_CONFIG, WELCOME_CONFIG, SCRIPT_DATA_RAW, SCRIPT_DATA;
+    let currentVoice, currentIndex = 0, isCruise = true, playbackRate = 0.98, activeAudio = "A", isPlaying = false;
+    
+    const audioA = document.getElementById('audioA'), audioB = document.getElementById('audioB');
+    const cardContainer = document.getElementById('cardContainer'), entryOverlay = document.getElementById('entryOverlay');
+    const pageIndicator = document.getElementById('pageIndicator'), cruiseToggleBtn = document.getElementById('cruiseToggle');
+    const voiceSelect = document.getElementById('voiceSelect'), rateSlider = document.getElementById('rateSlider'), rateVal = document.getElementById('rateVal');
+    const showGridBtn = document.getElementById('showGridBtn'), gridMenu = document.getElementById('gridMenu'), hideConsoleBtn = document.getElementById('hideConsoleBtn');
+    const consoleBar = document.getElementById('consoleBar'), toggleHudBtn = document.getElementById('toggleHudBtn'), appRoot = document.getElementById('appRoot');
+    const resumeConsoleBtn = document.getElementById('resumeConsoleBtn'), toastMsg = document.getElementById('toastMsg');
+
+    // 🚀 原生 ES6 动态导入（Dynamic Import）自启动沙箱
+    (async function bootstrapES6() {
+        const modulePath = window.CURRENT_THEME_MODULE || './data.js';
+        try {
+            // 利用高级原生动态 import 语法，异步按需吞吐目标 ES6 文件
+            const themeModule = await import(modulePath);
+            
+            THEME_CONFIG = themeModule.THEME_CONFIG;
+            VOICE_CONFIG = themeModule.VOICE_CONFIG;
+            WELCOME_CONFIG = themeModule.WELCOME_CONFIG;
+            SCRIPT_DATA_RAW = themeModule.SCRIPT_DATA_RAW;
+            
+            currentVoice = VOICE_CONFIG.defaultVoice || "zh-CN-XiaoxiaoNeural";
+            SCRIPT_DATA = SCRIPT_DATA_RAW.map(item => ({ ...item, cleanDetail: item.detail.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim() }));
+            
+            injectFrameworkAssets();
+            initControls();
+            SCRIPT_DATA.forEach(d => { if(d.img){ const img = new Image(); img.src = d.img; } });
+        } catch (err) {
+            console.error(err);
+            alert(`ES6 模块路由失败。请检查: \n1. 本地是否开启了 Web Server 运行服务。\n2. config.js 中的文件路径是否有误。\n错误描述: ${err.message}`);
+        }
+    })();
+
+    function injectFrameworkAssets() {
+        document.getElementById('cardContainer').style.boxShadow = `0 25px 45px -12px rgba(0, 0, 0, 0.6), 0 0 0 2px ${THEME_CONFIG.borderColor}`;
+        document.getElementById('enterBtn').style.backgroundColor = THEME_CONFIG.primaryColor;
+        document.getElementById('resumeConsoleBtn').style.backgroundColor = THEME_CONFIG.primaryColor;
+        document.getElementById('toastMsg').style.backgroundColor = THEME_CONFIG.primaryColor;
+        cruiseToggleBtn.classList.add('active');
+        cruiseToggleBtn.style.backgroundColor = THEME_CONFIG.primaryColor;
+
+        document.getElementById('welcomeEmoji').innerText = WELCOME_CONFIG.emoji || '📜';
+        document.getElementById('welcomeMainTitle').innerText = WELCOME_CONFIG.mainTitle || '未命名主题';
+        document.getElementById('welcomeSubTitle').innerText = WELCOME_CONFIG.subTitle || '';
+        document.getElementById('welcomeDescText').innerText = WELCOME_CONFIG.descText || '';
+        document.getElementById('enterBtn').innerText = WELCOME_CONFIG.actionBtnText || '⚡ 进入';
+        document.getElementById('hudTopicIndicator').innerText = `🎙️ ${WELCOME_CONFIG.mainTitle}`;
+        
+        voiceSelect.innerHTML = ''; 
+        if (VOICE_CONFIG && VOICE_CONFIG.options) {
+            VOICE_CONFIG.options.forEach(opt => {
+                const node = document.createElement('option');
+                node.value = opt.value; node.innerText = opt.label;
+                if (opt.value === currentVoice) node.selected = true;
+                voiceSelect.appendChild(node);
+            });
+        }
+        const scrollStyleTag = document.createElement("style");
+        document.head.appendChild(scrollStyleTag);
+        scrollStyleTag.innerHTML = `.detail-text::-webkit-scrollbar-thumb { background: ${THEME_CONFIG.primaryColor}; border-radius: 10px; }`;
+    }
+
+    function showToast(msg, duration=2000) {
+        toastMsg.innerText = msg; toastMsg.style.opacity = '1';
+        setTimeout(() => { toastMsg.style.opacity = '0'; }, duration);
+    }
+    function buildTTSURL(text, voice) { return `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text.substring(0, 580))}&v=${voice}`; }
+    function getNarrativeClean(index) { return SCRIPT_DATA[index].cleanDetail; }
+    
+    function renderCard(index, withFlash = true) {
+        if (!SCRIPT_DATA.length || index >= SCRIPT_DATA.length) return;
+        const d = SCRIPT_DATA[index];
+        const imgSrc = d.img && d.img.length ? d.img : "https://placehold.co/600x200?text=📜+Theme+Container";
+        const html = `
+            <div class="card-content">
+                <img class="card-image" src="${imgSrc}" alt="visual" onerror="this.src='https://placehold.co/600x160?text=♾️+Asset+Error'">
+                <div class="category-tag" style="color: ${THEME_CONFIG.primaryColor}">${d.category}</div>
+                <div class="dynamic-main-title mt-1 text-black">${d.title}</div>
+                <div class="red-hook" style="border-left: 6px solid ${THEME_CONFIG.primaryColor}; background: ${THEME_CONFIG.primaryBgLight}; color: ${THEME_CONFIG.primaryColor}">“ ${d.hook} ”</div>
+                <div class="detail-text">${d.detail}</div>
+                <div class="footer-note">${THEME_CONFIG.footerText}</div>
+            </div>
+        `;
+        if (withFlash) {
+            cardContainer.style.animation = 'none'; cardContainer.offsetHeight; cardContainer.classList.add('flash-switch');
+            cardContainer.innerHTML = html; setTimeout(() => cardContainer.classList.remove('flash-switch'), 150);
+        } else { cardContainer.innerHTML = html; }
+        pageIndicator.innerText = `PAGE ${index + 1} / ${SCRIPT_DATA.length}`;
+    }
+    
+    function preloadAudioToElement(elem, text, voice, rate) {
+        if (!text) return Promise.resolve(false);
+        const url = buildTTSURL(text, voice);
+        if (elem.src === url && elem.readyState >= 2) return Promise.resolve(true);
+        elem.src = url; elem.load(); elem.playbackRate = rate;
+        return new Promise((resolve) => {
+            const onReady = () => { resolve(true); cleanup(); };
+            const onError = () => { showToast("语音加载延迟..."); resolve(false); cleanup(); };
+            const cleanup = () => { elem.removeEventListener('canplaythrough', onReady); elem.removeEventListener('error', onError); };
+            elem.addEventListener('canplaythrough', onReady, { once: true }); elem.addEventListener('error', onError, { once: true });
+            setTimeout(() => { cleanup(); resolve(elem.readyState >= 2); }, 4000);
+        });
+    }
+    
+    function handleAudioEnded() {
+        if (!isCruise) { isPlaying = false; return; }
+        const nextIndex = (currentIndex + 1) % SCRIPT_DATA.length;
+        const nextAudioId = (activeAudio === 'A') ? 'B' : 'A';
+        const nextElem = (nextAudioId === 'A') ? audioA : audioB;
+        const doSwitch = () => {
+            activeAudio = nextAudioId; currentIndex = nextIndex; renderCard(currentIndex, true);
+            const nowPlaying = (activeAudio === 'A') ? audioA : audioB;
+            nowPlaying.playbackRate = playbackRate; nowPlaying.onended = handleAudioEnded;
+            nowPlaying.play().catch(() => { isPlaying = false; });
+            const furtherIdx = (currentIndex + 1) % SCRIPT_DATA.length;
+            preloadAudioToElement((activeAudio === 'A') ? audioB : audioA, getNarrativeClean(furtherIdx), currentVoice, playbackRate);
+        };
+        if (nextElem.readyState < 2) {
+            preloadAudioToElement(nextElem, getNarrativeClean(nextIndex), currentVoice, playbackRate).then(() => doSwitch()).catch(() => doSwitch());
+        } else { doSwitch(); }
+    }
+    
+    async function startFullCruise() {
+        if (isPlaying) { const cur = (activeAudio === 'A') ? audioA : audioB; cur.pause(); cur.onended = null; isPlaying = false; }
+        currentIndex = 0; renderCard(0, false);
+        await preloadAudioToElement(audioA, getNarrativeClean(0), currentVoice, playbackRate);
+        if(SCRIPT_DATA.length > 1) await preloadAudioToElement(audioB, getNarrativeClean(1), currentVoice, playbackRate);
+        activeAudio = 'A'; audioA.playbackRate = playbackRate; audioA.onended = handleAudioEnded;
+        audioA.play().then(() => { isPlaying = true; }).catch(() => showToast("请允许音频播放"));
+        isCruise = true; cruiseToggleBtn.innerText = "⏸️ 巡航开"; cruiseToggleBtn.style.backgroundColor = THEME_CONFIG.primaryColor;
+    }
+    
+    function jumpToPage(pageIdx, autoPlayWithCruise = true) {
+        if (pageIdx === currentIndex && isPlaying && isCruise) return;
+        if (isPlaying) { const cur = (activeAudio === 'A') ? audioA : audioB; cur.pause(); cur.onended = null; isPlaying = false; }
+        currentIndex = pageIdx; renderCard(currentIndex, false);
+        const targetText = getNarrativeClean(currentIndex);
+        if (autoPlayWithCruise && isCruise) {
+            preloadAudioToElement(audioA, targetText, currentVoice, playbackRate).then(() => {
+                activeAudio = 'A'; audioA.playbackRate = playbackRate; audioA.onended = handleAudioEnded;
+                audioA.play().then(() => { isPlaying = true; });
+                preloadAudioToElement(audioB, getNarrativeClean((currentIndex + 1) % SCRIPT_DATA.length), currentVoice, playbackRate);
+            });
+        } else if (!isCruise) {
+            preloadAudioToElement(audioA, targetText, currentVoice, playbackRate).then(() => {
+                activeAudio = 'A'; audioA.playbackRate = playbackRate; audioA.onended = () => { isPlaying = false; };
+                audioA.play().then(() => { isPlaying = true; });
+            });
+        }
+    }
+    
+    function buildGridMenu() {
+        gridMenu.innerHTML = '';
+        SCRIPT_DATA.forEach((_, idx) => {
+            const btn = document.createElement('button');
+            btn.innerText = `${idx + 1}`; btn.className = 'grid-btn';
+            btn.onclick = () => { jumpToPage(idx, true); gridMenu.classList.remove('show'); };
+            btn.addEventListener('click', (e) => { e.target.style.backgroundColor = THEME_CONFIG.primaryColor; });
+            gridMenu.appendChild(btn);
+        });
+    }
+    
+    function initControls() {
+        buildGridMenu();
+        cruiseToggleBtn.onclick = () => {
+            isCruise = !isCruise;
+            if (isCruise) {
+                cruiseToggleBtn.innerText = "⏸️ 巡航开"; cruiseToggleBtn.style.backgroundColor = THEME_CONFIG.primaryColor;
+                if (!isPlaying) startFullCruise();
+                else { const cur = (activeAudio === 'A') ? audioA : audioB; if (cur && !cur.paused) { cur.onended = handleAudioEnded; } else { startFullCruise(); } }
+            } else {
+                cruiseToggleBtn.innerText = "▶️ 巡航关"; cruiseToggleBtn.style.backgroundColor = "#1e1e1e";
+                if (isPlaying) { const cur = (activeAudio === 'A') ? audioA : audioB; cur.onended = () => { isPlaying = false; }; }
+            }
+        };
+        voiceSelect.onchange = (e) => {
+            currentVoice = e.target.value;
+            if (isPlaying) { const idx = currentIndex; const cur = (activeAudio === 'A') ? audioA : audioB; cur.pause(); cur.onended = null; isPlaying = false; jumpToPage(idx, isCruise); }
+            else { preloadAudioToElement(audioA, getNarrativeClean(currentIndex), currentVoice, playbackRate); }
+        };
+        rateSlider.oninput = (e) => {
+            playbackRate = parseFloat(e.target.value); rateVal.innerText = playbackRate.toFixed(2);
+            if (audioA) audioA.playbackRate = playbackRate; if (audioB) audioB.playbackRate = playbackRate;
+        };
+        showGridBtn.onclick = (e) => { e.stopPropagation(); gridMenu.classList.toggle('show'); };
+        hideConsoleBtn.onclick = () => { consoleBar.style.display = 'none'; resumeConsoleBtn.style.display = 'flex'; };
+        resumeConsoleBtn.onclick = () => { consoleBar.style.display = 'flex'; resumeConsoleBtn.style.display = 'none'; };
+        toggleHudBtn.onclick = () => { appRoot.classList.toggle('hide-hud'); toggleHudBtn.innerText = appRoot.classList.contains('hide-hud') ? '🖥️ 显示' : '👁️ 隐藏'; };
+        document.onclick = (e) => { if (!gridMenu.contains(e.target) && e.target !== showGridBtn) gridMenu.classList.remove('show'); };
+    }
+    
+    entryOverlay.onclick = async () => {
+        if (!SCRIPT_DATA) return;
+        entryOverlay.style.opacity = '0'; setTimeout(() => { entryOverlay.style.display = 'none'; }, 300);
+        playbackRate = parseFloat(rateSlider.value); currentVoice = voiceSelect.value;
+        await preloadAudioToElement(audioA, getNarrativeClean(0), currentVoice, playbackRate);
+        if(SCRIPT_DATA.length > 1) await preloadAudioToElement(audioB, getNarrativeClean(1), currentVoice, playbackRate);
+        renderCard(0, false); activeAudio = 'A'; audioA.playbackRate = playbackRate; audioA.onended = handleAudioEnded;
+        audioA.play().then(() => { isPlaying = true; isCruise = true; }).catch(() => showToast("点击允许音频播放"));
+    };
+    
+    document.body.addEventListener('touchmove', function(e) { if (e.target === document.body || e.target === document.documentElement) e.preventDefault(); }, { passive: false });
+    resumeConsoleBtn.style.display = 'none';
+</script>
+</body>
+</html>
