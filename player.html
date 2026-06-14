@@ -12,10 +12,13 @@
         * { user-select: none; -webkit-tap-highlight-color: transparent; }
         body { overflow: hidden; position: fixed; width: 100%; height: 100%; background: #000000; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         .screen-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; touch-action: pan-x pan-y; overflow: hidden; }
+        
         .card-panel { width: 86%; max-width: 380px; height: 560px; background: #ffffff; border-radius: 40px; padding: 20px 22px 0px 22px; box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; overflow: hidden; }
-        .card-content { display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative;  } /* 确保子元素绝对定位基准 */
+        
+        .card-content { display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative;  } 
         .card-image { width: 100%; height: 135px; object-fit: cover; object-position: center; border-radius: 24px; margin-bottom: 14px; background: #eef2ff; display: block; flex-shrink: 0; }
-        .detail-text { flex: 1; overflow-y: auto; font-size: 13.5px; line-height: 1.55; color: #2c3e4f; margin-top: 6px; padding-bottom: 60px; padding-right: 6px; } /* 预留底部空间防遮挡 */
+        
+        .detail-text { flex: 1; overflow-y: auto; font-size: 13.5px; line-height: 1.55; color: #2c3e4f; margin-top: 6px; padding-bottom: 55px; padding-right: 6px; } 
         .detail-text::-webkit-scrollbar { width: 3px; }
         .dynamic-main-title { font-family: 'Times New Roman', 'Georgia', 'Songti SC', serif; font-weight: 900; font-size: 20px; line-height: 1.25; flex-shrink: 0; }
         .red-hook { padding: 8px 12px; margin: 12px 0 10px 0; font-weight: 800; font-size: 12px; line-height: 1.35; flex-shrink: 0; border-radius: 0 14px 14px 0; }
@@ -36,7 +39,11 @@
         @keyframes cardPop { 0% { opacity: 0.6; transform: scale(0.98);} 100% { opacity: 1; transform: scale(1);} }
         .toast-msg { position: fixed; bottom: 90px; left: 20px; right: 20px; text-align: center; padding: 8px; border-radius: 60px; font-size: 12px; z-index: 200; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
         .resume-console-btn { position: absolute; bottom: 20px; right: 20px; width: 44px; height: 44px; border-radius: 44px; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; cursor: pointer; z-index: 50; }
-        @media (max-width: 480px) { .card-panel { height: 530px; padding: 16px 18px 20px; width: 88%;} .card-image { height: 120px; } }
+        
+        @media (max-width: 480px) { 
+            .card-panel { height: 530px; padding: 16px 18px 0px 18px; width: 88%;} 
+            .card-image { height: 120px; } 
+        }
     </style>
 </head>
 <body>
@@ -160,7 +167,7 @@
                 <div class="red-hook" style="border-left: 6px solid ${THEME_CONFIG.primaryColor}; background: ${THEME_CONFIG.primaryBgLight}; color: ${THEME_CONFIG.primaryColor}">“ ${d.hook} ”</div>
                 <div class="detail-text">${d.detail}</div>
 
-                <div class="absolute bottom-3 left-0 right-0 bg-white pt-4 pb-1 flex items-center justify-between" style="border-top: 1px solid #e9ecef;">
+                <div class="absolute bottom-0 left-0 right-0 bg-white pt-4 pb-2 flex items-center justify-between" style="border-top: 1px solid #e9ecef;">
                     <div class="flex items-center gap-2">
                         <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-sm">
                             <i data-lucide="coffee" class="w-4 h-4 text-black"></i>
@@ -178,11 +185,11 @@
         if (withFlash) {
             cardContainer.style.animation = 'none'; cardContainer.offsetHeight; cardContainer.classList.add('flash-switch');
             cardContainer.innerHTML = html; 
-            lucide.createIcons(); // 修复点 1：动画分支必须同步刷新渲染图标
+            lucide.createIcons();
             setTimeout(() => cardContainer.classList.remove('flash-switch'), 150);
         } else { 
             cardContainer.innerHTML = html; 
-            lucide.createIcons(); // 修复点 2：普通分支渲染图标
+            lucide.createIcons();
         }
         pageIndicator.innerText = `PAGE ${index + 1} / ${SCRIPT_DATA.length}`;
     }
@@ -196,6 +203,7 @@
             const onReady = () => { resolve(true); cleanup(); };
             const onError = () => { showToast("语音加载延迟..."); resolve(false); cleanup(); };
             const cleanup = () => { elem.removeEventListener('canplaythrough', onReady); elem.removeEventListener('error', onError); };
+            const networkError = () => { cleanup(); resolve(false); };
             elem.addEventListener('canplaythrough', onReady, { once: true }); elem.addEventListener('error', onError, { once: true });
             setTimeout(() => { cleanup(); resolve(elem.readyState >= 2); }, 4000);
         });
@@ -204,7 +212,6 @@
     function handleAudioEnded() {
         if (!isCruise) { isPlaying = false; return; }
         const nextIndex = (currentIndex + 1) % SCRIPT_DATA.length;
-        // 修复点 3：重构更鲁棒的双轨交替逻辑
         const nextAudioId = (activeAudio === 'A') ? 'B' : 'A';
         const currentElem = (activeAudio === 'A') ? audioA : audioB;
         const nextElem = (nextAudioId === 'A') ? audioA : audioB;
@@ -219,7 +226,6 @@
             nextElem.onended = handleAudioEnded;
             nextElem.play().then(() => { isPlaying = true; }).catch(() => { isPlaying = false; });
             
-            // 异步预加载再下一页
             const furtherIdx = (currentIndex + 1) % SCRIPT_DATA.length;
             preloadAudioToElement((activeAudio === 'A') ? audioB : audioA, getNarrativeClean(furtherIdx), currentVoice, playbackRate);
         };
