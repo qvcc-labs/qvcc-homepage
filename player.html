@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>流动叙事 · 通用卡片音频播放引擎</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <!-- 引入 Lucide 图标库 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="./config.js"></script>
     
     <style>
@@ -58,6 +59,17 @@
     </div>
     
     <div id="cardContainer" class="card-panel"></div>
+    
+    <!-- 左下角品牌标识 -->
+    <div class="fixed bottom-6 left-6 flex items-center gap-2 z-50 pointer-events-none">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-lg">
+            <i data-lucide="coffee" class="w-5 h-5 text-black"></i>
+        </div>
+        <div class="flex flex-col">
+            <span class="text-[10px] font-bold text-white tracking-widest">黑咖说</span>
+            <span class="text-[8px] text-slate-400 tracking-[0.1em]">BLACK COFFEE TALK</span>
+        </div>
+    </div>
     
     <div class="control-console" id="consoleBar">
         <button id="cruiseToggle" class="ctrl-btn">⏸️ 巡航开</button>
@@ -141,6 +153,9 @@
         const scrollStyleTag = document.createElement("style");
         document.head.appendChild(scrollStyleTag);
         scrollStyleTag.innerHTML = `.detail-text::-webkit-scrollbar-thumb { background: ${THEME_CONFIG.primaryColor}; border-radius: 10px; }`;
+        
+        // 确保图标库渲染
+        lucide.createIcons();
     }
 
     function showToast(msg, duration=2000) {
