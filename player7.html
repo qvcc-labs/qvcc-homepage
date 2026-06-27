@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>流动叙事 · 画布播放引擎</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        .screen-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* ===== 幻灯片全屏 ===== */
+        .slide-fullscreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+        .slide-fullscreen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .slide-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            animation: kenBurns 20s ease-in-out infinite alternate;
+            transform-origin: center center;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        .slide-fullscreen.active .slide-bg {
+            opacity: 1;
+        }
+
+        @keyframes kenBurns {
+            0% { transform: scale(1) translate(0, 0); }
+            50% { transform: scale(1.08) translate(-1%, -1%); }
+            100% { transform: scale(1.12) translate(1%, 0.5%); }
+        }
+
+        .slide-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg,
+                    rgba(7, 9, 14, 0.2) 0%,
+                    rgba(7, 9, 14, 0.6) 30%,
+                    rgba(7, 9, 14, 0.88) 65%,
+                    rgba(7, 9, 14, 0.98) 100%);
+        }
+
+        .slide-content {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            position: relative;
+            z-index: 5;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 6vh 0 2vh 0;
+        }
+        .slide-fullscreen.active .slide-content {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+
+        /* 文字部分保持内边距 */
+        .slide-index {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 0 7vw;
+            margin-bottom: 6px;
+            color: #ffd700;
+        }
+        .slide-title {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #fff;
+            padding: 0 7vw;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+        .slide-hook {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.5;
+            padding: 0 7vw;
+            margin-bottom: 8px;
+            padding-left: 12px;
+            border-left: 3px solid #ffd700;
+            color: #ffd700;
+        }
+        .data-showcase {
+            display: flex;
+            gap: 24px;
+            padding: 0 7vw;
+            margin: 4px 0 8px 0;
+        }
+        .data-item { flex: 1; }
+        .data-number {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .data-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 2px;
+        }
+        .slide-detail {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.6;
+            padding: 0 7vw;
+            margin-top: 6px;
+            max-height: 44px;
+            overflow: hidden;
+        }
+
+        /* ★★★ 核心：画布插槽 —— 吃掉所有剩余空间 ★★★ */
+        .viz-slot {
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+            position: relative;
+            margin: 2px 0;
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .viz-slot.hidden {
+            display: none !important;
+        }
+        .viz-slot canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* ★★★ 无图表模式：回退到 player6 的底部沉浸布局 ★★★ */
+        .slide-fullscreen.no-chart .slide-content {
+            justify-content: flex-end;
+            padding: 10vh 7vw 18vh;
+        }
+        .slide-fullscreen.no-chart .slide-index,
+        .slide-fullscreen.no-chart .slide-title,
+        .slide-fullscreen.no-chart .slide-hook,
+        .slide-fullscreen.no-chart .data-showcase,
+        .slide-fullscreen.no-chart .chapter-divider,
+        .slide-fullscreen.no-chart .slide-detail {
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .slide-fullscreen.no-chart .slide-index {
+            margin-bottom: 10px;
+        }
+        .slide-fullscreen.no-chart .slide-title {
+            font-size: 30px;
+            margin-bottom: 12px;
+        }
+        .slide-fullscreen.no-chart .slide-hook {
+            font-size: 15px;
+            margin-bottom: 14px;
+            padding-left: 12px;
+        }
+        .slide-fullscreen.no-chart .data-showcase {
+            margin: 18px 0;
+        }
+        .slide-fullscreen.no-chart .data-number {
+            font-size: 42px;
+        }
+        .slide-fullscreen.no-chart .data-label {
+            font-size: 12px;
+            margin-top: 6px;
+        }
+        .slide-fullscreen.no-chart .chapter-divider {
+            margin: 12px 0;
+        }
+        .slide-fullscreen.no-chart .slide-detail {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.8;
+            max-height: none;
+            margin-top: 0;
+            text-align: justify;
+        }
+
+        .chapter-divider {
+            width: 36px;
+            height: 3px;
+            border-radius: 2px;
+            margin: 8px 7vw;
+            background: linear-gradient(90deg, #ffd700, #ff6b35);
+        }
+
+        .voice-pill {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(12px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            background: rgba(255, 215, 0, 0.12);
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .voice-pill.playing { opacity: 1; }
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 14px;
+        }
+        .voice-wave span {
+            width: 2px;
+            border-radius: 1px;
+            background: #ffd700;
+            animation: wave 0.5s ease infinite alternate;
+        }
+        .voice-wave span:nth-child(1) { height: 5px; animation-delay: 0s; }
+        .voice-wave span:nth-child(2) { height: 9px; animation-delay: 0.1s; }
+        .voice-wave span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+        .voice-wave span:nth-child(4) { height: 9px; animation-delay: 0.3s; }
+        .voice-wave span:nth-child(5) { height: 5px; animation-delay: 0.4s; }
+        @keyframes wave {
+            from { transform: scaleY(0.4); opacity: 0.4; }
+            to { transform: scaleY(1); opacity: 1; }
+        }
+        .voice-text {
+            font-size: 10px;
+            font-weight: 500;
+            color: #ffd700;
+        }
+
+        .page-pill {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            backdrop-filter: blur(8px);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 20;
+            letter-spacing: 1px;
+            background: rgba(255, 215, 0, 0.18);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .progress-track {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            z-index: 10;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.1s linear;
+            background: linear-gradient(90deg, #ffd700, #ff6b35);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        }
+
+        /* ===== End Card ===== */
+        .end-card-content {
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center;
+            padding: 10vh 7vw !important;
+        }
+        .end-brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            animation: endFadeIn 0.8s ease 0.3s both;
+        }
+        .end-logo-img {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .end-brand-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+        .end-divider {
+            width: 40px;
+            height: 2px;
+            border-radius: 1px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+            margin-bottom: 28px;
+            animation: endFadeIn 0.8s ease 0.5s both;
+        }
+        .end-cta {
+            font-size: clamp(1.1rem, 4vw, 1.5rem);
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.5;
+            max-width: 400px;
+            margin-bottom: 12px;
+            animation: endFadeIn 0.8s ease 0.7s both;
+        }
+        .end-cta-sub {
+            font-size: 13px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.15em;
+            animation: endFadeIn 0.8s ease 0.9s both;
+        }
+        @keyframes endFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           入口 — 无按钮极简设计 + 流动光效背景
+           ============================================================ */
+        .entry-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #050810;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            overflow: hidden;
+        }
+        .entry-overlay.fade-out {
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+        .entry-bg-effects {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .entry-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: orbFloat 12s ease-in-out infinite;
+        }
+        .entry-orb-1 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(255,107,53,0.35) 0%, transparent 70%);
+            top: -10%; left: -10%;
+            animation-delay: 0s;
+        }
+        .entry-orb-2 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(255,215,0,0.25) 0%, transparent 70%);
+            bottom: -5%; right: -5%;
+            animation-delay: -4s;
+            animation-duration: 15s;
+        }
+        .entry-orb-3 {
+            width: 280px; height: 280px;
+            background: radial-gradient(circle, rgba(255,107,53,0.2) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -8s;
+            animation-duration: 18s;
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -20px) scale(1.1); }
+            50% { transform: translate(-20px, 30px) scale(0.95); }
+            75% { transform: translate(15px, 15px) scale(1.05); }
+        }
+        .entry-flow-lines {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.15;
+        }
+        .flow-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.6), transparent);
+            animation: flowMove 8s linear infinite;
+        }
+        .flow-line:nth-child(1) { width: 60%; top: 20%; left: -60%; animation-delay: 0s; }
+        .flow-line:nth-child(2) { width: 40%; top: 35%; left: -40%; animation-delay: -2s; animation-duration: 10s; }
+        .flow-line:nth-child(3) { width: 50%; top: 55%; left: -50%; animation-delay: -4s; animation-duration: 12s; }
+        .flow-line:nth-child(4) { width: 45%; top: 70%; left: -45%; animation-delay: -6s; animation-duration: 9s; }
+        .flow-line:nth-child(5) { width: 55%; top: 85%; left: -55%; animation-delay: -1s; animation-duration: 11s; }
+        @keyframes flowMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(250%); }
+        }
+        .entry-particles {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,215,0,0.6);
+            border-radius: 50%;
+            animation: particleDrift 20s linear infinite;
+        }
+        .particle:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+        .particle:nth-child(2) { top: 30%; left: 80%; animation-delay: -3s; }
+        .particle:nth-child(3) { top: 60%; left: 15%; animation-delay: -7s; }
+        .particle:nth-child(4) { top: 80%; left: 70%; animation-delay: -11s; }
+        .particle:nth-child(5) { top: 45%; left: 50%; animation-delay: -15s; }
+        @keyframes particleDrift {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translate(50px, -80px) scale(0); opacity: 0; }
+        }
+        .entry-card {
+            position: relative;
+            z-index: 10;
+            width: 88%;
+            max-width: 520px;
+            padding: 48px 36px 44px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+            margin-top: -18vh;
+        }
+        .entry-overlay:hover .entry-card {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+        }
+        .entry-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.4), transparent);
+        }
+        .entry-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 36px;
+        }
+        .entry-logo img {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        .entry-logo-text { text-align: left; }
+        .entry-logo-text .name {
+            font-size: 17px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        .entry-logo-text .slogan {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 2px;
+        }
+        .entry-divider {
+            width: 48px;
+            height: 2px;
+            margin: 0 auto 28px;
+            border-radius: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.6), transparent);
+            animation: dividerPulse 3s ease-in-out infinite;
+        }
+        @keyframes dividerPulse {
+            0%, 100% { opacity: 0.4; transform: scaleX(1); }
+            50% { opacity: 1; transform: scaleX(1.3); }
+        }
+        .entry-title {
+            font-size: clamp(2.2rem, 9vw, 3.4rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.85) 50%, #ffd700 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 40px rgba(255,215,0,0.15);
+        }
+        .entry-sub {
+            font-size: clamp(0.85rem, 2.8vw, 1.1rem);
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.45);
+            letter-spacing: 0.25em;
+            margin-bottom: 20px;
+        }
+        .entry-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.35);
+            line-height: 1.8;
+            max-width: 340px;
+            margin: 0 auto;
+            letter-spacing: 0.02em;
+        }
+        .entry-error {
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 16px;
+            display: none;
+            line-height: 1.6;
+            background: rgba(255, 0, 0, 0.08);
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 0, 0, 0.15);
+        }
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .slide-title { font-size: 22px; }
+            .slide-detail { font-size: 11px; }
+            .data-number { font-size: 28px; }
+            .entry-card { padding: 40px 28px 36px; border-radius: 24px; }
+            .entry-title { font-size: clamp(1.9rem, 8.5vw, 2.6rem); }
+        }
+        @media (max-width: 380px) {
+            .entry-title { font-size: clamp(1.7rem, 8vw, 2.2rem); }
+            .entry-card { padding: 32px 22px 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="screen-container" id="app">
+
+    <!-- ============================================================
+    入口
+    ============================================================ -->
+    <div class="entry-overlay" id="entryOverlay">
+        <div class="entry-bg-effects">
+            <div class="entry-orb entry-orb-1"></div>
+            <div class="entry-orb entry-orb-2"></div>
+            <div class="entry-orb entry-orb-3"></div>
+        </div>
+        <div class="entry-flow-lines">
+            <div class="flow-line"></div>
+            <div class="flow-line"></div>
+            <div class="flow-line"></div>
+            <div class="flow-line"></div>
+            <div class="flow-line"></div>
+        </div>
+        <div class="entry-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+
+        <div class="entry-card">
+            <div class="entry-logo" id="entryLogo">
+                <img src="" alt="logo" id="entryLogoImg" style="display:none;">
+                <div class="entry-logo-text">
+                    <div class="name" id="entryBrandName">黑咖说</div>
+                    <div class="slogan" id="entryBrandSlogan"></div>
+                </div>
+            </div>
+            <div class="entry-divider"></div>
+            <div class="entry-title" id="entryTitle">流动叙事</div>
+            <div class="entry-sub" id="entrySub">· 画布播放引擎 ·</div>
+            <div class="entry-desc" id="entryDesc"></div>
+            <div class="entry-error" id="errorMsg"></div>
+        </div>
+    </div>
+
+    <!-- ===== 幻灯片容器 ===== -->
+    <div id="slidesContainer"></div>
+
+    <!-- ===== 音频 ===== -->
+    <audio id="audioA" preload="metadata"></audio>
+    <audio id="audioB" preload="metadata"></audio>
+
+    <div class="debug-info" id="debugInfo"></div>
+</div>
+
+<script type="module">
+    // ================================================================
+    // 配置与状态
+    // ================================================================
+    let THEME_CONFIG, VOICE_CONFIG, WELCOME_CONFIG, SCRIPT_DATA_RAW, SCRIPT_DATA;
+    let BRAND_CONFIG = { logo: '', name: '黑咖说', slogan: '' };
+
+    let currentVoice, currentIndex = 0,
+        isCruise = true,
+        playbackRate = 0.98;
+    let activeAudio = "A",
+        isPlaying = false;
+    let recordProgressTimer = null,
+        recordVoiceIndicator = null;
+    let currentDestroyFn = null; // 存储当前卡片的图表销毁函数
+
+    const audioA = document.getElementById('audioA');
+    const audioB = document.getElementById('audioB');
+    const slidesContainer = document.getElementById('slidesContainer');
+    const debugInfo = document.getElementById('debugInfo');
+
+    const entryOverlay = document.getElementById('entryOverlay');
+    const entryLogoImg = document.getElementById('entryLogoImg');
+    const entryBrandName = document.getElementById('entryBrandName');
+    const entryBrandSlogan = document.getElementById('entryBrandSlogan');
+    const entryTitle = document.getElementById('entryTitle');
+    const entrySub = document.getElementById('entrySub');
+    const entryDesc = document.getElementById('entryDesc');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // ================================================================
+    // 加载数据
+    // ================================================================
+    async function loadData() {
+        showDebug('正在加载 data.js ...');
+        try {
+            const module = await import('./data.js');
+            THEME_CONFIG = module.THEME_CONFIG;
+            VOICE_CONFIG = module.VOICE_CONFIG;
+            WELCOME_CONFIG = module.WELCOME_CONFIG;
+            SCRIPT_DATA_RAW = module.SCRIPT_DATA_RAW;
+            BRAND_CONFIG = module.BRAND_CONFIG || { logo: '', name: '黑咖说', slogan: '' };
+
+            currentVoice = VOICE_CONFIG.defaultVoice || "zh-CN-YunjianNeural";
+            playbackRate = VOICE_CONFIG.rate || 0.98;
+
+            SCRIPT_DATA = SCRIPT_DATA_RAW.map(item => ({
+                ...item,
+                cleanDetail: item.voiceText || item.detail.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim()
+            }));
+
+            showDebug(`✅ 加载成功: ${SCRIPT_DATA.length} 张卡片`);
+            updateEntry();
+            initApp();
+
+        } catch (err) {
+            console.error('加载失败:', err);
+            showDebug(`❌ 加载失败: ${err.message}`);
+            showError(`无法加载 data.js<br><br>请确认:<br>① 使用本地服务器<br>② data.js 与 player.html 在同一目录<br>③ 浏览器支持 ES6 Module<br><br>错误: ${err.message}`);
+        }
+    }
+
+    function showDebug(msg) {
+        debugInfo.innerText = msg;
+        console.log(msg);
+    }
+
+    function showError(html) {
+        errorMsg.innerHTML = html;
+        errorMsg.style.display = 'block';
+    }
+
+    function updateEntry() {
+        if (BRAND_CONFIG.logo) {
+            entryLogoImg.src = BRAND_CONFIG.logo;
+            entryLogoImg.style.display = 'inline-block';
+        }
+        entryBrandName.textContent = BRAND_CONFIG.name || '黑咖说';
+        entryBrandSlogan.textContent = BRAND_CONFIG.slogan || '';
+
+        const w = WELCOME_CONFIG || {};
+        entryTitle.textContent = w.mainTitle || '流动叙事';
+        entrySub.textContent = w.subTitle || '· 画布播放引擎 ·';
+        if (w.description) {
+            entryDesc.innerHTML = w.description.replace(/\n/g, '<br>');
+        } else {
+            entryDesc.style.display = 'none';
+        }
+    }
+
+    // ================================================================
+    // 初始化应用
+    // ================================================================
+    function initApp() {
+        // 动态注入主题色
+        const style = document.createElement('style');
+        const primary = THEME_CONFIG.primaryColor || '#ffd700';
+        const accent = THEME_CONFIG.accentColor || '#ff6b35';
+        style.textContent = `
+            .slide-index, .slide-hook { color: ${accent}; }
+            .slide-hook { border-left-color: ${primary}; }
+            .data-number { background: linear-gradient(135deg, #fff, ${accent}); -webkit-background-clip: text; background-clip: text; color: transparent; }
+            .chapter-divider { background: linear-gradient(90deg, ${primary}, ${accent}); }
+            .progress-fill { background: linear-gradient(90deg, ${primary}, ${accent}); }
+            .page-pill { background: ${primary}30; color: rgba(255,255,255,0.7); }
+            .voice-pill { border-color: ${primary}66; background: ${primary}1A; }
+            .voice-wave span { background: ${primary}; }
+            .voice-text { color: ${primary}; }
+            .entry-title { background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.85) 50%, ${primary} 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+            .entry-divider { background: linear-gradient(90deg, transparent, ${primary}99, transparent); }
+            .entry-card { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${primary}0F inset, 0 0 80px ${accent}15 inset; }
+            .entry-orb-1 { background: radial-gradient(circle, ${accent}40 0%, transparent 70%); }
+            .entry-orb-2 { background: radial-gradient(circle, ${primary}30 0%, transparent 70%); }
+            .entry-orb-3 { background: radial-gradient(circle, ${accent}25 0%, transparent 70%); }
+            .flow-line { background: linear-gradient(90deg, transparent, ${primary}60, transparent); }
+            .particle { background: ${primary}99; }
+            .end-divider { background: linear-gradient(90deg, transparent, ${primary}, transparent); }
+        `;
+        document.head.appendChild(style);
+
+        renderSlides();
+        // 预加载图片
+        SCRIPT_DATA.forEach(d => {
+            if (d.img && typeof d.img === 'string') {
+                const img = new Image();
+                img.src = d.img;
+            }
+        });
+    }
+
+    // ================================================================
+    // 渲染幻灯片（viz-slot 默认隐藏）
+    // ================================================================
+    function renderSlides() {
+        let html = '';
+        SCRIPT_DATA.forEach((d, idx) => {
+            const isActive = idx === 0 ? 'active' : '';
+
+            const dataHtml = d.hasData && d.data ? `
+                <div class="data-showcase">
+                    ${d.data.map(item => `
+                        <div class="data-item">
+                            <div class="data-number">${item.number}</div>
+                            <div class="data-label">${item.label}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div class="chapter-divider"></div>';
+
+            html += `
+                <div class="slide-fullscreen ${isActive} ${!d.renderChart ? 'no-chart' : ''}" id="slide-${idx}">
+                    <div class="slide-bg" style="background-image: url('${d.img}');"></div>
+                    <div class="voice-pill" id="voicePill-${idx}">
+                        <div class="voice-wave">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <span class="voice-text">解说中</span>
+                    </div>
+                    <div class="page-pill">${String(idx + 1).padStart(2, '0')} / ${SCRIPT_DATA.length}</div>
+                    <div class="slide-content">
+                        <div class="slide-index">${d.category}</div>
+                        <div class="slide-title">${d.title.replace(/\n/g, '<br>')}</div>
+                        <div class="slide-hook">" ${d.hook} "</div>
+                        ${dataHtml}
+                        <!-- viz-slot 默认 display:none，有图表时才打开 -->
+                        <div class="viz-slot hidden" id="viz-slot-${idx}">
+                            <canvas id="canvas-${idx}"></canvas>
+                        </div>
+                        <div class="slide-detail">${d.detail}</div>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFill-${idx}"></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // End Card
+        const endIdx = SCRIPT_DATA.length;
+        const brandLogo = BRAND_CONFIG.logo ? `<img src="${BRAND_CONFIG.logo}" alt="logo" class="end-logo-img">` : '';
+        const brandName = BRAND_CONFIG.name || '黑咖说';
+        html += `
+            <div class="slide-fullscreen" id="slide-${endIdx}">
+                <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800');"></div>
+                <div class="page-pill">END</div>
+                <div class="slide-content end-card-content">
+                    <div class="end-brand">
+                        ${brandLogo}
+                        <div class="end-brand-name">${brandName}</div>
+                    </div>
+                    <div class="end-divider"></div>
+                    <div class="end-cta">关注视频号，更多商业与科技解构故事</div>
+                    <div class="end-cta-sub">深度拆解 · 商业洞察 · 科技前沿</div>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill-${endIdx}"></div>
+                </div>
+            </div>
+        `;
+
+        slidesContainer.innerHTML = html;
+    }
+
+    // ================================================================
+    // 核心：切换幻灯片 & 按需显示/渲染图表
+    // ================================================================
+    function goToSlide(index) {
+        const totalSlides = SCRIPT_DATA.length + 1;
+        if (index < 0) index = totalSlides - 1;
+        if (index >= totalSlides) index = 0;
+        currentIndex = index;
+
+        // 切换显示
+        document.querySelectorAll('.slide-fullscreen').forEach((el, idx) => {
+            el.classList.toggle('active', idx === currentIndex);
+        });
+
+        // 进度条重置
+        if (recordProgressTimer) clearInterval(recordProgressTimer);
+        document.querySelectorAll('.progress-fill').forEach(el => el.style.width = '0%');
+
+        // 语音指示器
+        if (currentIndex < SCRIPT_DATA.length) {
+            recordVoiceIndicator = document.getElementById(`voicePill-${currentIndex}`);
+        } else {
+            recordVoiceIndicator = null;
+        }
+
+        // ★★★ 核心：销毁之前的图表（如果有）★★★
+        if (currentDestroyFn && typeof currentDestroyFn === 'function') {
+            try {
+                currentDestroyFn();
+            } catch (e) {
+                console.warn('销毁图表失败:', e);
+            }
+            currentDestroyFn = null;
+        }
+
+        // ★★★ 核心：按需显示/隐藏 viz-slot & 调用 data.js 中定义的 renderChart ★★★
+        const slide = SCRIPT_DATA[currentIndex];
+        const vizSlot = document.getElementById(`viz-slot-${currentIndex}`);
+        const currentSlideEl = document.getElementById(`slide-${currentIndex}`);
+
+        if (slide && slide.renderChart && typeof slide.renderChart === 'function') {
+            // 有图表：显示插槽并渲染
+            if (vizSlot) vizSlot.classList.remove('hidden');
+            if (currentSlideEl) currentSlideEl.classList.remove('no-chart');
+            const canvas = document.getElementById(`canvas-${currentIndex}`);
+            if (canvas) {
+                try {
+                    const result = slide.renderChart(canvas);
+                    if (typeof result === 'function') {
+                        currentDestroyFn = result;
+                    }
+                } catch (e) {
+                    console.error('渲染图表失败:', e);
+                }
+            }
+        } else {
+            // 无图表：隐藏插槽，切换为无图表布局
+            if (vizSlot) vizSlot.classList.add('hidden');
+            if (currentSlideEl) currentSlideEl.classList.add('no-chart');
+        }
+    }
+
+    function nextSlide() { goToSlide(currentIndex + 1); }
+    function prevSlide() { goToSlide(currentIndex - 1); }
+
+    function showVoiceIndicator(show) {
+        if (recordVoiceIndicator) {
+            recordVoiceIndicator.classList.toggle('playing', show);
+        }
+    }
+
+    // ================================================================
+    // 音频引擎（保持不变）
+    // ================================================================
+    function buildTTSURL(text, voice) {
+        return `https://libretts.is-an.org/api/tts?t=${encodeURIComponent(text.substring(0, 580))}&v=${voice}`;
+    }
+
+    function getVoiceText(index) {
+        return SCRIPT_DATA[index].cleanDetail;
+    }
+
+    function preloadAudio(elem, text, voice, rate) {
+        if (!text) return Promise.resolve(false);
+        const url = buildTTSURL(text, voice);
+        if (elem.src === url && elem.readyState >= 2) return Promise.resolve(true);
+
+        elem.src = url;
+        elem.load();
+        elem.playbackRate = rate;
+
+        return new Promise((resolve) => {
+            const onReady = () => { resolve(true); cleanup(); };
+            const onError = () => { resolve(false); cleanup(); };
+            const cleanup = () => {
+                elem.removeEventListener('canplaythrough', onReady);
+                elem.removeEventListener('error', onError);
+            };
+            elem.addEventListener('canplaythrough', onReady, { once: true });
+            elem.addEventListener('error', onError, { once: true });
+            setTimeout(() => { cleanup(); resolve(elem.readyState >= 2); }, 4000);
+        });
+    }
+
+    function startProgress() {
+        if (recordProgressTimer) clearInterval(recordProgressTimer);
+        const fill = document.getElementById(`progressFill-${currentIndex}`);
+        if (!fill) return;
+
+        let progress = 0;
+        const duration = 12000;
+        const step = 50;
+
+        recordProgressTimer = setInterval(() => {
+            progress += step;
+            const pct = Math.min((progress / duration) * 100, 100);
+            fill.style.width = pct + '%';
+            if (progress >= duration) clearInterval(recordProgressTimer);
+        }, step);
+    }
+
+    function handleAudioEnded() {
+        if (!isCruise) { isPlaying = false; return; }
+
+        const totalSlides = SCRIPT_DATA.length + 1;
+        const nextIndex = (currentIndex + 1) % totalSlides;
+        const isEnteringEndCard = nextIndex === SCRIPT_DATA.length;
+        const isLeavingEndCard = currentIndex === SCRIPT_DATA.length;
+        const nextAudioId = (activeAudio === 'A') ? 'B' : 'A';
+        const currentElem = (activeAudio === 'A') ? audioA : audioB;
+        const nextElem = (nextAudioId === 'A') ? audioA : audioB;
+
+        currentElem.onended = null;
+
+        const doPlay = () => {
+            activeAudio = nextAudioId;
+            goToSlide(nextIndex);
+
+            if (isEnteringEndCard) {
+                isPlaying = true;
+                showVoiceIndicator(false);
+                startProgress();
+                setTimeout(() => {
+                    if (isCruise && currentIndex === SCRIPT_DATA.length) {
+                        handleAudioEnded();
+                    }
+                }, 5000);
+                return;
+            }
+
+            nextElem.playbackRate = playbackRate;
+            nextElem.onended = handleAudioEnded;
+            nextElem.play().then(() => {
+                isPlaying = true;
+                showVoiceIndicator(true);
+            }).catch(() => {
+                isPlaying = false;
+                showVoiceIndicator(false);
+            });
+
+            startProgress();
+
+            const furtherIdx = currentIndex + 1;
+            if (furtherIdx < SCRIPT_DATA.length) {
+                preloadAudio((activeAudio === 'A') ? audioB : audioA, getVoiceText(furtherIdx), currentVoice, playbackRate);
+            }
+        };
+
+        if (isEnteringEndCard || isLeavingEndCard) {
+            doPlay();
+            return;
+        }
+
+        if (nextElem.readyState < 2) {
+            preloadAudio(nextElem, getVoiceText(nextIndex), currentVoice, playbackRate).then(() => doPlay());
+        } else {
+            doPlay();
+        }
+    }
+
+    async function startPlayback() {
+        if (isPlaying) {
+            const cur = (activeAudio === 'A') ? audioA : audioB;
+            cur.pause();
+            cur.onended = null;
+            isPlaying = false;
+        }
+
+        currentIndex = 0;
+        goToSlide(0);
+
+        await preloadAudio(audioA, getVoiceText(0), currentVoice, playbackRate);
+        if (SCRIPT_DATA.length > 1) {
+            await preloadAudio(audioB, getVoiceText(1), currentVoice, playbackRate);
+        }
+
+        activeAudio = 'A';
+        audioA.playbackRate = playbackRate;
+        audioA.onended = handleAudioEnded;
+
+        audioA.play().then(() => {
+            isPlaying = true;
+            showVoiceIndicator(true);
+            startProgress();
+        }).catch(err => {
+            showDebug('播放失败: ' + err.message);
+        });
+    }
+
+    // ================================================================
+    // 交互
+    // ================================================================
+    function enterPlayback() {
+        if (!SCRIPT_DATA) return;
+        entryOverlay.classList.add('fade-out');
+        setTimeout(() => { entryOverlay.style.display = 'none'; }, 800);
+        startPlayback();
+    }
+
+    entryOverlay.addEventListener('click', enterPlayback);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            if (entryOverlay.style.display !== 'none') {
+                e.preventDefault();
+                enterPlayback();
+            }
+        }
+    });
+
+    // 点击切换
+    document.getElementById('app').addEventListener('click', (e) => {
+        if (entryOverlay.style.display !== 'none') return;
+        if (!isPlaying) return;
+
+        const rect = document.getElementById('app').getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const cur = (activeAudio === 'A') ? audioA : audioB;
+        cur.pause();
+        cur.onended = null;
+
+        if (x < rect.width / 2) {
+            prevSlide();
+        } else {
+            nextSlide();
+        }
+
+        if (currentIndex === SCRIPT_DATA.length) {
+            isPlaying = true;
+            showVoiceIndicator(false);
+            startProgress();
+            setTimeout(() => {
+                if (isCruise && currentIndex === SCRIPT_DATA.length) {
+                    handleAudioEnded();
+                }
+            }, 5000);
+            return;
+        }
+
+        const target = (activeAudio === 'A') ? audioA : audioB;
+        preloadAudio(target, getVoiceText(currentIndex), currentVoice, playbackRate).then(() => {
+            target.playbackRate = playbackRate;
+            target.onended = handleAudioEnded;
+            target.play().then(() => { isPlaying = true; showVoiceIndicator(true); startProgress(); });
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (entryOverlay.style.display !== 'none') return;
+        if (e.key === 'ArrowRight' || e.key === ' ') {
+            e.preventDefault();
+            const cur = (activeAudio === 'A') ? audioA : audioB;
+            cur.pause();
+            cur.onended = null;
+            nextSlide();
+
+            if (currentIndex === SCRIPT_DATA.length) {
+                isPlaying = true;
+                showVoiceIndicator(false);
+                startProgress();
+                setTimeout(() => {
+                    if (isCruise && currentIndex === SCRIPT_DATA.length) {
+                        handleAudioEnded();
+                    }
+                }, 5000);
+                return;
+            }
+
+            const target = (activeAudio === 'A') ? audioA : audioB;
+            preloadAudio(target, getVoiceText(currentIndex), currentVoice, playbackRate).then(() => {
+                target.playbackRate = playbackRate;
+                target.onended = handleAudioEnded;
+                target.play().then(() => { isPlaying = true; showVoiceIndicator(true); startProgress(); });
+            });
+        } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const cur = (activeAudio === 'A') ? audioA : audioB;
+            cur.pause();
+            cur.onended = null;
+            prevSlide();
+
+            if (currentIndex === SCRIPT_DATA.length) {
+                isPlaying = true;
+                showVoiceIndicator(false);
+                startProgress();
+                setTimeout(() => {
+                    if (isCruise && currentIndex === SCRIPT_DATA.length) {
+                        handleAudioEnded();
+                    }
+                }, 5000);
+                return;
+            }
+
+            const target = (activeAudio === 'A') ? audioA : audioB;
+            preloadAudio(target, getVoiceText(currentIndex), currentVoice, playbackRate).then(() => {
+                target.playbackRate = playbackRate;
+                target.onended = handleAudioEnded;
+                target.play().then(() => { isPlaying = true; showVoiceIndicator(true); startProgress(); });
+            });
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            const cur = (activeAudio === 'A') ? audioA : audioB;
+            cur.pause();
+        } else if (isPlaying) {
+            const cur = (activeAudio === 'A') ? audioA : audioB;
+            cur.play();
+        }
+    });
+
+    // ================================================================
+    // 启动
+    // ================================================================
+    loadData();
+</script>
+
+</body>
+</html>
